@@ -103,7 +103,7 @@ tbody td{padding:6px 10px;color:#1a2a1a;vertical-align:middle}
     <div style="overflow-x:auto">
       <table>
         <thead><tr>
-          <th>Supervisor</th><th>Base</th><th>Leiturista</th><th>Tipo</th><th>Detalhe</th><th>Mês</th><th>Prazo</th><th>Status</th><th></th>
+          <th>Supervisor</th><th>Base</th><th>Leiturista</th><th>Tipo</th><th>Detalhe</th><th>Mês</th><th>Prazo</th><th>Status</th><th>Resposta</th><th></th>
         </tr></thead>
         <tbody id="tbody-painel"><tr><td colspan="9" class="status-msg">Carregando...</td></tr></tbody>
       </table>
@@ -191,7 +191,7 @@ async function sair(){await sb.auth.signOut();location.href='../teste/index.html
 
 // ── PAINEL ────────────────────────────────────────────────────────
 async function carregarPainel(){
-  document.getElementById('tbody-painel').innerHTML='<tr><td colspan="9" class="status-msg">Carregando...</td></tr>';
+  document.getElementById('tbody-painel').innerHTML='<tr><td colspan="10" class="status-msg">Carregando...</td></tr>';
   const mes=document.getElementById('p-mes').value;
   const status=document.getElementById('p-status').value;
   const base=document.getElementById('p-base').value;
@@ -236,8 +236,17 @@ async function carregarPainel(){
             <span style="font-size:10px;color:#4a7a4a">${t.respondida_em?new Date(t.respondida_em).toLocaleString('pt-BR'):''}</span>
           </div>`:'—'}
       </td>
+      <td><button onclick="deletarTratativa(${t.id})" style="background:none;border:0.5px solid #f09595;color:#a32d2d;border-radius:4px;padding:3px 8px;font-size:10px;cursor:pointer">Deletar</button></td>
     </tr>`)
-  .join(''):'<tr><td colspan="9" class="status-msg">Nenhuma tratativa encontrada.</td></tr>';
+  .join(''):'<tr><td colspan="10" class="status-msg">Nenhuma tratativa encontrada.</td></tr>';
+}
+
+async function deletarTratativa(id){
+  const senha=prompt('Senha para deletar:');
+  if(senha!=='Batman1'){if(senha!==null)alert('Senha incorreta.');return;}
+  if(!confirm('Confirma a exclusão desta tratativa?')) return;
+  await sb.from('tratativas').delete().eq('id',id);
+  await carregarPainel();
 }
 
 function toggleResp(id,btn){
