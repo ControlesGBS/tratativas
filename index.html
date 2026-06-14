@@ -384,7 +384,7 @@ async function carregarSupervisores(){
     .in('perfil',['supervisor']).eq('ativo',true).order('nome');
   const sel=document.getElementById('m-sup');
   sel.innerHTML='<option value="">Selecione...</option>';
-  (data||[]).forEach(s=>sel.innerHTML+=`<option value="${s.id}" data-email="${s.email}" data-nome="${s.nome}">${s.nome} — ${s.base||'Todas'}</option>`);
+  (data||[]).forEach(s=>sel.innerHTML+=`<option value="${s.id}" data-email="${s.email}" data-nome="${s.nome}" data-base="${s.base||''}">${s.nome} — ${s.base||'Todas'}</option>`);
 }
 
 async function enviarManual(){
@@ -399,15 +399,17 @@ async function enviarManual(){
   const supId=sel.value;
   const supEmail=opt.dataset.email;
   const supNome=opt.dataset.nome;
+  const supBase=opt.dataset.base||null;
   const prazoStr=new Date(prazoInp+'T12:00:00').toLocaleDateString('pt-BR');
   const {data:trat}=await sb.from('tratativas').insert({
     tipo:'manual', automatica:false,
     supervisor_id:supId, supervisor_email:supEmail, supervisor_nome:supNome,
+    base:supBase,
     detalhe:msg,
     prazo_resposta:prazoInp,
   }).select().single();
   const link=`${location.origin}/controles/tratativas/responder.html?id=${trat?.id}`;
-  const {assunto,corpo}=montarEmail({supNome,base:'—',tipo:'manual',ocorrencia:msg,prazoStr,link});
+  const {assunto,corpo}=montarEmail({supNome,base:supBase||'—',tipo:'manual',ocorrencia:msg,prazoStr,link});
   await fetch(`${SUPABASE_URL}/functions/v1/enviar-email`,{
     method:'POST',
     headers:{'Content-Type':'application/json','Authorization':`Bearer ${SUPABASE_KEY}`},
