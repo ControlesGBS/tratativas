@@ -224,7 +224,7 @@ async function carregarPainel(){
       <td style="max-width:180px;font-size:11px">${t.detalhe||'—'}</td>
       <td>${t.mes_ref||'—'}</td>
       <td>${t.prazo_resposta?new Date(t.prazo_resposta+'T12:00:00').toLocaleDateString('pt-BR'):'—'}</td>
-      <td><span class="badge ${BADGEC[t.status_calc]}">${BADGET[t.status_calc]}</span></td>
+      <td><span class="badge ${BADGEC[t.status_calc]}">${BADGET[t.status_calc]}</span>${t.respondida&&t.respondida_em?` <span style="font-size:10px;color:#4a7a4a">${new Date(t.respondida_em).toLocaleDateString('pt-BR')}</span>`:''}</td>
       <td style="min-width:120px">
         ${t.respondida?`
           <button class="btn-ver" onclick="toggleResp(${t.id},this)">Ver resposta</button>
