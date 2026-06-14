@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Minhas Tratativas — GBS</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,sans-serif;background:#f4f6f4;color:#1a2a1a;font-size:13px}
+.hdr{background:#1a4a1a;color:#fff;padding:10px 20px;display:flex;align-items:center;gap:12px}
+.hdr-logo{width:28px;height:28px;background:#2d7a2d;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#c8e8c8;flex-shrink:0}
+.hdr-title{font-size:15px;font-weight:500;color:#c8e8c8;flex:1;text-align:center}
+.hdr-user{font-size:11px;color:#90c090}
+.btn-sair{background:none;border:1px solid #4a7a4a;color:#c8e8c8;padding:4px 12px;border-radius:4px;cursor:pointer;font-size:12px}
+.content{padding:16px 20px;max-width:1000px}
+.kpi-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+.kpi{background:#fff;border:0.5px solid #c0dcc0;border-radius:8px;padding:10px 14px;text-align:center}
+.kpi-label{font-size:10px;color:#4a7a4a;text-transform:uppercase;letter-spacing:.3px;margin-bottom:4px}
+.kpi-value{font-size:22px;font-weight:500;color:#1a4a1a}
+.kpi-value.r{color:#a32d2d}.kpi-value.a{color:#854f0b}.kpi-value.g{color:#27500a}
+.filtros{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;align-items:flex-end}
+.filtros label{font-size:11px;color:#4a7a4a;display:block;margin-bottom:3px}
+.filtros select{border:0.5px solid #a0c8a0;border-radius:5px;padding:4px 8px;font-size:12px;background:#f8fbf8;color:#1a2a1a;height:28px}
+.sec{background:#fff;border:0.5px solid #c0dcc0;border-radius:8px;overflow:hidden;margin-bottom:12px}
+.sec-hdr{background:#1a4a1a;color:#c0e8c0;padding:8px 14px;font-size:12px;font-weight:500;display:flex;justify-content:space-between;align-items:center}
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead th{background:#1a4a1a;color:#c0e8c0;padding:6px 10px;text-align:left;font-size:11px;font-weight:500;white-space:nowrap}
+tbody tr{border-bottom:0.5px solid #e0eee0}
+tbody tr:nth-child(even){background:#f8fbf8}
+tbody td{padding:7px 10px;color:#1a2a1a;vertical-align:middle}
+.badge{display:inline-block;padding:2px 8px;border-radius:8px;font-size:10px;font-weight:500}
+.b-ab{background:#faeeda;color:#633806}
+.b-re{background:#eaf3de;color:#27500a}
+.b-at{background:#fcebeb;color:#791f1f}
+.b-ga{background:#eeedfe;color:#3c3489}
+.btn-resp{background:#2d7a2d;color:#fff;border:none;border-radius:4px;padding:3px 10px;font-size:10px;cursor:pointer}
+.btn-ver{background:none;border:0.5px solid #a0c8a0;color:#1a4a1a;border-radius:4px;padding:3px 10px;font-size:10px;cursor:pointer}
+.resp-box{display:none;margin-top:6px;background:#f0f8f0;border-left:3px solid #2d7a2d;padding:6px 8px;border-radius:4px;font-size:11px;line-height:1.6}
+.resp-label{font-size:9px;color:#4a7a4a;text-transform:uppercase;letter-spacing:.2px;display:block;margin-bottom:1px;margin-top:4px}
+.resp-label:first-child{margin-top:0}
+.status-msg{padding:16px;text-align:center;color:#4a7a4a;font-size:12px}
+</style>
+</head>
+<body>
+<div class="hdr">
+  <div class="hdr-logo">GBS</div>
+  <div class="hdr-title">MINHAS TRATATIVAS</div>
+  <span class="hdr-user" id="hdr-user"></span>
+  <button class="btn-sair" onclick="sair()">Sair</button>
+</div>
+
+<div class="content">
+  <div class="kpi-row">
+    <div class="kpi"><div class="kpi-label">Abertas</div><div class="kpi-value a" id="kpi-ab">—</div></div>
+    <div class="kpi"><div class="kpi-label">Respondidas</div><div class="kpi-value g" id="kpi-re">—</div></div>
+    <div class="kpi"><div class="kpi-label">Atrasadas</div><div class="kpi-value r" id="kpi-at">—</div></div>
+  </div>
+
+  <div class="filtros">
+    <div><label>Status</label>
+      <select id="f-status" onchange="renderTabela()">
+        <option value="">Todos</option>
+        <option value="aberta">Aberta</option>
+        <option value="respondida">Respondida</option>
+        <option value="atrasada">Atrasada</option>
+      </select>
+    </div>
+    <div><label>Mês</label>
+      <select id="f-mes" onchange="renderTabela()"><option value="">Todos</option></select>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-hdr">
+      <span>Tratativas</span>
+      <span id="count" style="font-size:11px;color:#90c090"></span>
+    </div>
+    <table>
+      <thead><tr>
+        <th>Tipo</th><th>Detalhe</th><th>Mês</th><th>Prazo</th><th>Status</th><th>Ação</th>
+      </tr></thead>
+      <tbody id="tbody"><tr><td colspan="6" class="status-msg">Carregando...</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL='https://ndwivbhqglpnfyqwjbzu.supabase.co';
+const SUPABASE_KEY='sb_publishable_IhuNziyT5VYrMKRixcPGjA_LAn5ku-7';
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+const TIPO={'impedimentos':'Impedimentos','erros':'Erros leitura','meta':'Meta leituras','inicio_tardio':'Início tardio','manual':'Manual'};
+let LISTA=[];
+
+async function sair(){await sb.auth.signOut();location.href='/controles/teste/index.html';}
+
+(async()=>{
+  const {data:{user}}=await sb.auth.getUser();
+  if(!user){location.href='/controles/teste/index.html';return;}
+  const {data:up}=await sb.from('usuarios_portal').select('nome,perfil,ativo').eq('id',user.id).single();
+  if(!up||!up.ativo){location.href='/controles/teste/index.html';return;}
+  document.getElementById('hdr-user').textContent=up.nome||user.email;
+
+  const {data:trats}=await sb.from('tratativas')
+    .select('*').eq('supervisor_id',user.id).order('created_at',{ascending:false});
+  LISTA=trats||[];
+
+  // Popular filtro meses
+  const meses=[...new Set(LISTA.map(t=>t.mes_ref).filter(Boolean))].sort().reverse();
+  const selMes=document.getElementById('f-mes');
+  meses.forEach(m=>selMes.innerHTML+=`<option value="${m}">${m}</option>`);
+
+  renderTabela();
+})();
+
+function renderTabela(){
+  const status=document.getElementById('f-status').value;
+  const mes=document.getElementById('f-mes').value;
+  const hoje=new Date(); hoje.setHours(0,0,0,0);
+
+  let lista=LISTA.map(t=>({...t,
+    sc:t.respondida?'respondida':new Date(t.prazo_resposta)<hoje?'atrasada':'aberta'
+  }));
+  if(status) lista=lista.filter(t=>t.sc===status);
+  if(mes) lista=lista.filter(t=>t.mes_ref===mes);
+
+  document.getElementById('kpi-ab').textContent=LISTA.filter(t=>!t.respondida&&new Date(t.prazo_resposta)>=hoje).length;
+  document.getElementById('kpi-re').textContent=LISTA.filter(t=>t.respondida).length;
+  document.getElementById('kpi-at').textContent=LISTA.filter(t=>!t.respondida&&new Date(t.prazo_resposta)<hoje).length;
+  document.getElementById('count').textContent=`${lista.length} tratativa(s)`;
+
+  const BC={respondida:'b-re',atrasada:'b-at',aberta:'b-ab'};
+  const BT={respondida:'Respondida',atrasada:'Atrasada',aberta:'Aberta'};
+
+  document.getElementById('tbody').innerHTML=lista.length?lista.map(t=>`
+    <tr>
+      <td><span class="badge b-ga">${TIPO[t.tipo]||t.tipo}</span></td>
+      <td style="max-width:220px;font-size:11px">${t.detalhe||'—'}</td>
+      <td>${t.mes_ref||'—'}</td>
+      <td>${t.prazo_resposta?new Date(t.prazo_resposta+'T12:00:00').toLocaleDateString('pt-BR'):'—'}</td>
+      <td>
+        <span class="badge ${BC[t.sc]}">${BT[t.sc]}</span>
+        ${t.respondida&&t.respondida_em?` <span style="font-size:10px;color:#4a7a4a">${new Date(t.respondida_em).toLocaleDateString('pt-BR')}</span>`:''}
+      </td>
+      <td>
+        ${!t.respondida
+          ?`<button class="btn-resp" onclick="window.open('/controles/tratativas/responder.html?id=${t.id}','_blank')">Responder</button>`
+          :`<button class="btn-ver" onclick="toggleResp(this)">Ver resposta</button>
+            <div class="resp-box">
+              <span class="resp-label">Causa</span>${t.causa||'—'}
+              <span class="resp-label">Ação tomada</span>${t.acao_tomada||'—'}
+              <span style="font-size:10px;color:#4a7a4a;margin-top:4px;display:block">Respondido em ${new Date(t.respondida_em).toLocaleString('pt-BR')}</span>
+            </div>`
+        }
+      </td>
+    </tr>`).join('')
+    :'<tr><td colspan="6" class="status-msg">Nenhuma tratativa encontrada.</td></tr>';
+}
+
+function toggleResp(btn){
+  const box=btn.nextElementSibling;
+  const vis=box.style.display==='none'||!box.style.display;
+  box.style.display=vis?'block':'none';
+  btn.textContent=vis?'Minimizar':'Ver resposta';
+}
+</script>
+</body>
+</html>
