@@ -135,6 +135,10 @@ tbody td{padding:6px 10px;color:#1a2a1a;vertical-align:middle}
           <label>Mensagem / Ocorrência</label>
           <textarea id="m-msg" placeholder="Descreva a ocorrência..."></textarea>
         </div>
+        <div class="form-group">
+          <label>Prazo para resposta</label>
+          <input type="date" id="m-prazo" style="border:0.5px solid #a0c8a0;border-radius:5px;padding:6px 8px;font-size:12px;background:#f8fbf8;color:#1a2a1a;height:32px;width:100%">
+        </div>
       </div>
       <button class="btn-verde" style="margin-top:10px" onclick="enviarManual()">Enviar email</button>
       <div class="msg" id="m-msg-status"></div>
@@ -217,29 +221,31 @@ async function carregarPainel(){
       <td>${t.base||'—'}</td>
       <td>${t.nome_leiturista||t.matricula||'—'}</td>
       <td><span class="badge b-ga">${TIPO[t.tipo]||t.tipo}</span></td>
-      <td style="max-width:200px;font-size:11px">${t.detalhe||'—'}</td>
+      <td style="max-width:180px;font-size:11px">${t.detalhe||'—'}</td>
       <td>${t.mes_ref||'—'}</td>
       <td>${t.prazo_resposta?new Date(t.prazo_resposta+'T12:00:00').toLocaleDateString('pt-BR'):'—'}</td>
       <td><span class="badge ${BADGEC[t.status_calc]}">${BADGET[t.status_calc]}</span></td>
-      <td>${t.respondida?`<button class="btn-ver" onclick="toggleResp(${t.id})">Ver resposta</button>`:'—'}</td>
-    </tr>
-    ${t.respondida?`<tr id="resp-${t.id}" style="display:none"><td colspan="9">
-      <div class="resp-expand">
-        <div class="resp-label">Causa</div><div>${t.causa||'—'}</div>
-        <div class="resp-label">Ação tomada</div><div>${t.acao_tomada||'—'}</div>
-        <div style="font-size:10px;color:#4a7a4a;margin-top:6px">Respondido em ${t.respondida_em?new Date(t.respondida_em).toLocaleString('pt-BR'):'—'}</div>
-      </div>
-    </td></tr>`:''}`)
+      <td style="min-width:120px">
+        ${t.respondida?`
+          <button class="btn-ver" onclick="toggleResp(${t.id},this)">Ver resposta</button>
+          <div id="resp-${t.id}" style="display:none;margin-top:6px;background:#f0f8f0;border-left:3px solid #2d7a2d;padding:6px 8px;border-radius:4px;font-size:11px;line-height:1.5">
+            <span style="font-size:9px;color:#4a7a4a;text-transform:uppercase;letter-spacing:.2px">Causa</span><br>
+            <span>${t.causa||'—'}</span><br>
+            <span style="font-size:9px;color:#4a7a4a;text-transform:uppercase;letter-spacing:.2px;margin-top:4px;display:block">Ação tomada</span>
+            <span>${t.acao_tomada||'—'}</span><br>
+            <span style="font-size:10px;color:#4a7a4a">${t.respondida_em?new Date(t.respondida_em).toLocaleString('pt-BR'):''}</span>
+          </div>`:'—'}
+      </td>
+    </tr>`)
   .join(''):'<tr><td colspan="9" class="status-msg">Nenhuma tratativa encontrada.</td></tr>';
 }
 
-function toggleResp(id){
+function toggleResp(id,btn){
   const el=document.getElementById(`resp-${id}`);
   if(!el) return;
   const vis=el.style.display==='none';
-  el.style.display=vis?'table-row':'none';
-  const btn=document.querySelector(`#tr-${id} .btn-ver`);
-  if(btn) btn.textContent=vis?'Minimizar':'Ver resposta';
+  el.style.display=vis?'block':'none';
+  btn.textContent=vis?'Minimizar':'Ver resposta';
 }
 
 // ── CONFIG ────────────────────────────────────────────────────────
@@ -345,20 +351,21 @@ async function enviarManual(){
   const sel=document.getElementById('m-sup');
   const opt=sel.options[sel.selectedIndex];
   const msg=document.getElementById('m-msg').value.trim();
+  const prazoInp=document.getElementById('m-prazo').value;
   const status=document.getElementById('m-msg-status');
   if(!sel.value||!msg){status.className='msg erro';status.textContent='Selecione o supervisor e escreva a mensagem.';return;}
+  if(!prazoInp){status.className='msg erro';status.textContent='Defina o prazo para resposta.';return;}
   status.className='msg';status.textContent='Enviando...';
   const supId=sel.value;
   const supEmail=opt.dataset.email;
   const supNome=opt.dataset.nome;
-  // Salvar tratativa manual
+  const prazoStr=new Date(prazoInp+'T12:00:00').toLocaleDateString('pt-BR');
   const {data:trat}=await sb.from('tratativas').insert({
     tipo:'manual', automatica:false,
     supervisor_id:supId, supervisor_email:supEmail, supervisor_nome:supNome,
     detalhe:msg,
-    prazo_resposta:new Date(Date.now()+5*86400000).toISOString().split('T')[0],
+    prazo_resposta:prazoInp,
   }).select().single();
-  // Enviar email
   const link=`${location.origin}/controles/tratativas/responder.html?id=${trat?.id}`;
   await fetch(`${SUPABASE_URL}/functions/v1/enviar-email`,{
     method:'POST',
@@ -366,12 +373,14 @@ async function enviarManual(){
     body:JSON.stringify({
       para:supEmail,
       assunto:'[GBS] Tratativa manual — ação necessária',
-      corpo:`<p>Olá, ${supNome}!</p><p>${msg}</p><p><a href="${link}">Clique aqui para registrar a tratativa</a></p><p>GBS Serviços</p>`
+      corpo:`<p>Olá, ${supNome}!</p><p>${msg}</p><p><strong>Prazo para resposta:</strong> ${prazoStr}</p><p><a href="${link}">Clique aqui para registrar a tratativa</a></p><p>GBS Serviços</p>`
     })
   });
   status.className='msg ok';status.textContent=`✓ Email enviado para ${supNome}!`;
   document.getElementById('m-msg').value='';
+  document.getElementById('m-prazo').value='';
   sel.value='';
+  await carregarPainel();
 }
 </script>
 </body>
