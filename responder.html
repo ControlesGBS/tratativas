@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Responder Tratativa — GBS</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,sans-serif;background:#f4f6f4;color:#1a2a1a;font-size:13px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;min-height:100vh;padding:24px 16px}
+.card{background:#fff;border:0.5px solid #c0dcc0;border-radius:10px;padding:24px;width:100%;max-width:500px}
+.logo{display:flex;align-items:center;gap:8px;margin-bottom:20px}
+.logo-box{width:32px;height:32px;background:#1a4a1a;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#c8e8c8}
+.logo-txt{font-size:15px;font-weight:500;color:#1a4a1a}
+.ctx-box{background:#f0f8f0;border:0.5px solid #c0dcc0;border-radius:6px;padding:10px 12px;margin-bottom:16px;font-size:12px;color:#4a7a4a;line-height:1.7}
+.ctx-box strong{color:#1a2a1a}
+.form-group{margin-bottom:12px}
+.form-group label{display:block;font-size:10px;color:#4a7a4a;text-transform:uppercase;letter-spacing:.3px;margin-bottom:4px}
+.form-group textarea{width:100%;border:0.5px solid #a0c8a0;border-radius:5px;padding:8px 10px;font-size:13px;background:#f8fbf8;color:#1a2a1a;height:80px;resize:none}
+.form-group textarea:focus{outline:none;border-color:#2d7a2d}
+.btn-verde{width:100%;background:#2d7a2d;color:#fff;border:none;border-radius:6px;padding:10px;font-size:14px;font-weight:500;cursor:pointer;margin-top:4px}
+.btn-verde:disabled{background:#90c090;cursor:not-allowed}
+.msg{font-size:12px;margin-top:8px;min-height:16px;text-align:center}
+.msg.ok{color:#16a34a}.msg.erro{color:#a32d2d}
+.titulo{font-size:16px;font-weight:500;color:#1a4a1a;margin-bottom:4px}
+.subtitulo{font-size:12px;color:#4a7a4a;margin-bottom:16px}
+.ja-respondido{background:#eaf3de;border:0.5px solid #a0c8a0;border-radius:6px;padding:12px;text-align:center;color:#27500a;font-size:13px}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">
+    <div class="logo-box">GBS</div>
+    <span class="logo-txt">GBS Serviços</span>
+  </div>
+  <div id="conteudo"><p style="color:#4a7a4a;text-align:center">Carregando...</p></div>
+</div>
+
+<script>
+const SUPABASE_URL='https://ndwivbhqglpnfyqwjbzu.supabase.co';
+const SUPABASE_KEY='sb_publishable_IhuNziyT5VYrMKRixcPGjA_LAn5ku-7';
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+
+const TIPO_LABEL={'impedimentos':'Impedimentos GBS','erros':'Erros de leitura','meta':'Meta de leituras','inicio_tardio':'Início tardio','manual':'Tratativa manual'};
+
+(async()=>{
+  const params=new URLSearchParams(location.search);
+  const id=params.get('id');
+  if(!id){document.getElementById('conteudo').innerHTML='<p style="color:#a32d2d;text-align:center">Link inválido.</p>';return;}
+  const {data:t}=await sb.from('tratativas').select('*').eq('id',id).single();
+  if(!t){document.getElementById('conteudo').innerHTML='<p style="color:#a32d2d;text-align:center">Tratativa não encontrada.</p>';return;}
+  if(t.respondida){
+    document.getElementById('conteudo').innerHTML=`
+      <div class="titulo">Tratativa já respondida</div>
+      <div class="subtitulo">Esta tratativa foi respondida em ${new Date(t.respondida_em).toLocaleString('pt-BR')}.</div>
+      <div class="ja-respondido">✓ Resposta registrada com sucesso.<br>Obrigado!</div>`;
+    return;
+  }
+  const prazoStr=t.prazo_resposta?new Date(t.prazo_resposta+'T12:00:00').toLocaleDateString('pt-BR'):'—';
+  document.getElementById('conteudo').innerHTML=`
+    <div class="titulo">Tratativa — ${TIPO_LABEL[t.tipo]||t.tipo}</div>
+    <div class="subtitulo">Olá, ${t.supervisor_nome||'Supervisor'}! Registre sua resposta abaixo.</div>
+    <div class="ctx-box">
+      ${t.matricula?`<strong>Leiturista:</strong> ${t.matricula}${t.nome_leiturista?' — '+t.nome_leiturista:''}<br>`:''}
+      <strong>Ocorrência:</strong> ${t.detalhe||'—'}<br>
+      ${t.mes_ref?`<strong>Mês de referência:</strong> ${t.mes_ref}<br>`:''}
+      <strong>Prazo para resposta:</strong> ${prazoStr}
+    </div>
+    <div class="form-group">
+      <label>Causa</label>
+      <textarea id="inp-causa" placeholder="Descreva a causa do problema..."></textarea>
+    </div>
+    <div class="form-group">
+      <label>Ação tomada</label>
+      <textarea id="inp-acao" placeholder="O que foi feito para resolver..."></textarea>
+    </div>
+    <button class="btn-verde" id="btn-enviar" onclick="enviarResposta(${t.id})">Enviar resposta</button>
+    <div class="msg" id="msg-resp"></div>`;
+})();
+
+async function enviarResposta(id){
+  const causa=document.getElementById('inp-causa').value.trim();
+  const acao=document.getElementById('inp-acao').value.trim();
+  const msg=document.getElementById('msg-resp');
+  const btn=document.getElementById('btn-enviar');
+  if(!causa||!acao){msg.className='msg erro';msg.textContent='Preencha a causa e a ação tomada.';return;}
+  btn.disabled=true;msg.className='msg';msg.textContent='Enviando...';
+  const {error}=await sb.from('tratativas').update({
+    respondida:true, respondida_em:new Date().toISOString(),
+    causa, acao_tomada:acao,
+  }).eq('id',id);
+  if(error){msg.className='msg erro';msg.textContent='Erro ao salvar. Tente novamente.';btn.disabled=false;return;}
+  document.getElementById('conteudo').innerHTML=`
+    <div class="titulo" style="text-align:center;margin-bottom:12px">✓ Resposta enviada!</div>
+    <div class="ja-respondido">Sua tratativa foi registrada com sucesso.<br>Obrigado!</div>`;
+}
+</script>
+</body>
+</html>

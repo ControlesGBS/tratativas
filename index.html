@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tratativas — GBS Serviços</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,sans-serif;background:#f4f6f4;color:#1a2a1a;font-size:13px}
+.hdr{background:#1a4a1a;color:#fff;padding:10px 20px;display:flex;align-items:center;gap:12px}
+.hdr-title{font-size:15px;font-weight:500;color:#c8e8c8;flex:1;text-align:center}
+.hdr-user{font-size:11px;color:#90c090}
+.btn-sair{background:none;border:1px solid #4a7a4a;color:#c8e8c8;padding:4px 12px;border-radius:4px;cursor:pointer;font-size:12px}
+.nav{display:flex;gap:2px;background:#0f2e0f;padding:6px 20px}
+.nav button{background:none;border:none;color:#90c090;padding:6px 16px;border-radius:4px;cursor:pointer;font-size:13px}
+.nav button.ativo{background:#2d7a2d;color:#fff}
+.nav button:hover:not(.ativo){background:#1a4a1a}
+.pag{display:none;padding:16px 20px}.pag.ativo{display:block}
+.sec{background:#fff;border:0.5px solid #c0dcc0;border-radius:8px;margin-bottom:12px;overflow:hidden}
+.sec-hdr{background:#1a4a1a;color:#c0e8c0;padding:8px 14px;font-size:12px;font-weight:500;display:flex;align-items:center;justify-content:space-between}
+.sec-body{padding:14px}
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
+.kpi{background:#fff;border:0.5px solid #c0dcc0;border-radius:8px;padding:10px 14px;text-align:center}
+.kpi-label{font-size:10px;color:#4a7a4a;text-transform:uppercase;letter-spacing:.3px;margin-bottom:4px}
+.kpi-value{font-size:22px;font-weight:500;color:#1a4a1a}
+.kpi-value.r{color:#a32d2d}.kpi-value.a{color:#854f0b}.kpi-value.g{color:#27500a}
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead th{background:#1a4a1a;color:#c0e8c0;padding:6px 10px;text-align:left;font-size:11px;font-weight:500;white-space:nowrap}
+tbody tr{border-bottom:0.5px solid #e0eee0}
+tbody tr:nth-child(even){background:#f8fbf8}
+tbody td{padding:6px 10px;color:#1a2a1a;vertical-align:middle}
+.badge{display:inline-block;padding:2px 8px;border-radius:8px;font-size:10px;font-weight:500}
+.b-ab{background:#faeeda;color:#633806}
+.b-re{background:#eaf3de;color:#27500a}
+.b-at{background:#fcebeb;color:#791f1f}
+.b-ga{background:#eeedfe;color:#3c3489}
+.btn-ver{background:none;border:0.5px solid #a0c8a0;color:#1a4a1a;border-radius:4px;padding:3px 10px;font-size:10px;cursor:pointer}
+.resp-expand{background:#f0f8f0;border-top:2px solid #2d7a2d;padding:10px 14px;font-size:12px;color:#1a2a1a;line-height:1.6}
+.resp-label{font-size:9px;color:#4a7a4a;text-transform:uppercase;letter-spacing:.2px;margin-bottom:2px;margin-top:8px}
+.resp-label:first-child{margin-top:0}
+.filtros-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;align-items:flex-end}
+.filtros-row label{font-size:11px;color:#4a7a4a;display:block;margin-bottom:3px}
+.filtros-row select{border:0.5px solid #a0c8a0;border-radius:5px;padding:4px 8px;font-size:12px;background:#f8fbf8;color:#1a2a1a;height:28px}
+.gatilho-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:3px solid #c0dcc0;flex-wrap:wrap}
+.gatilho-row:last-child{border-bottom:none}
+.g-nome{font-size:12px;font-weight:500;color:#1a2a1a;min-width:140px}
+.g-desc{font-size:11px;color:#4a7a4a}
+.inp-s{border:0.5px solid #a0c8a0;border-radius:5px;padding:3px 7px;font-size:12px;background:#f8fbf8;color:#1a2a1a;height:26px;width:70px}
+.pill-on{background:#eaf3de;color:#27500a;border:0.5px solid #a0c8a0;border-radius:10px;padding:2px 10px;font-size:10px;font-weight:500;cursor:pointer}
+.pill-off{background:#fcebeb;color:#791f1f;border:0.5px solid #f09595;border-radius:10px;padding:2px 10px;font-size:10px;font-weight:500;cursor:pointer}
+.btn-pause{background:none;border:0.5px solid #f09595;color:#a32d2d;border-radius:4px;padding:3px 10px;font-size:10px;cursor:pointer}
+.btn-pause.pausado{border-color:#a0c8a0;color:#27500a}
+.btn-verde{background:#2d7a2d;color:#fff;border:none;border-radius:6px;padding:7px 18px;font-size:12px;font-weight:500;cursor:pointer}
+.btn-verde:hover{background:#1a5a1a}
+.btn-verde:disabled{background:#90c090;cursor:not-allowed}
+.status-msg{padding:16px;text-align:center;color:#4a7a4a;font-size:12px}
+.manual-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.form-group{display:flex;flex-direction:column;gap:4px}
+.form-group label{font-size:10px;color:#4a7a4a;text-transform:uppercase;letter-spacing:.3px}
+.form-group select,.form-group textarea{border:0.5px solid #a0c8a0;border-radius:5px;padding:6px 8px;font-size:12px;background:#f8fbf8;color:#1a2a1a}
+.form-group textarea{height:70px;resize:none}
+.msg{font-size:11px;margin-top:6px;min-height:16px}
+.msg.ok{color:#16a34a}.msg.erro{color:#a32d2d}
+.vazio{padding:14px;text-align:center;color:#4a7a4a;font-size:12px;font-style:italic}
+</style>
+</head>
+<body>
+<div class="hdr">
+  <div style="width:28px;height:28px;background:#2d7a2d;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#c8e8c8">GBS</div>
+  <div class="hdr-title">ÁREA DO GESTOR — TRATATIVAS</div>
+  <span class="hdr-user" id="hdr-user"></span>
+  <button class="btn-sair" onclick="sair()">Sair</button>
+</div>
+<div class="nav">
+  <button class="ativo" onclick="irPag('painel',this)">Painel</button>
+  <button onclick="irPag('config',this)">Configurações</button>
+  <button onclick="irPag('manual',this)">Envio manual</button>
+</div>
+
+<!-- PAINEL -->
+<div class="pag ativo" id="pag-painel">
+  <div class="filtros-row">
+    <div><label>Mês</label><select id="p-mes" onchange="carregarPainel()"><option value="">Todos</option></select></div>
+    <div><label>Status</label>
+      <select id="p-status" onchange="carregarPainel()">
+        <option value="">Todos</option>
+        <option value="aberta">Aberta</option>
+        <option value="respondida">Respondida</option>
+        <option value="atrasada">Atrasada</option>
+      </select>
+    </div>
+    <div><label>Base</label><select id="p-base" onchange="carregarPainel()"><option value="">Todas</option></select></div>
+  </div>
+  <div class="kpi-row">
+    <div class="kpi"><div class="kpi-label">Abertas</div><div class="kpi-value a" id="kpi-ab">—</div></div>
+    <div class="kpi"><div class="kpi-label">Respondidas</div><div class="kpi-value g" id="kpi-re">—</div></div>
+    <div class="kpi"><div class="kpi-label">Atrasadas</div><div class="kpi-value r" id="kpi-at">—</div></div>
+    <div class="kpi"><div class="kpi-label">Total</div><div class="kpi-value" id="kpi-tot">—</div></div>
+  </div>
+  <div class="sec">
+    <div class="sec-hdr"><span>Tratativas</span><span id="p-count" style="font-size:11px;color:#90c090"></span></div>
+    <div style="overflow-x:auto">
+      <table>
+        <thead><tr>
+          <th>Supervisor</th><th>Base</th><th>Leiturista</th><th>Tipo</th><th>Detalhe</th><th>Mês</th><th>Prazo</th><th>Status</th><th></th>
+        </tr></thead>
+        <tbody id="tbody-painel"><tr><td colspan="9" class="status-msg">Carregando...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIG -->
+<div class="pag" id="pag-config">
+  <div class="sec">
+    <div class="sec-hdr">Configurações de gatilhos</div>
+    <div class="sec-body" id="config-body">
+      <div class="status-msg">Carregando...</div>
+    </div>
+  </div>
+</div>
+
+<!-- MANUAL -->
+<div class="pag" id="pag-manual">
+  <div class="sec">
+    <div class="sec-hdr">Envio manual de tratativa</div>
+    <div class="sec-body">
+      <div class="manual-grid">
+        <div class="form-group">
+          <label>Supervisor destinatário</label>
+          <select id="m-sup"><option value="">Selecione...</option></select>
+        </div>
+        <div class="form-group">
+          <label>Mensagem / Ocorrência</label>
+          <textarea id="m-msg" placeholder="Descreva a ocorrência..."></textarea>
+        </div>
+      </div>
+      <button class="btn-verde" style="margin-top:10px" onclick="enviarManual()">Enviar email</button>
+      <div class="msg" id="m-msg-status"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL='https://ndwivbhqglpnfyqwjbzu.supabase.co';
+const SUPABASE_KEY='sb_publishable_IhuNziyT5VYrMKRixcPGjA_LAn5ku-7';
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+let CFG=null;
+
+function irPag(id,btn){
+  document.querySelectorAll('.pag').forEach(p=>p.classList.remove('ativo'));
+  document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('ativo'));
+  document.getElementById('pag-'+id).classList.add('ativo');
+  btn.classList.add('ativo');
+  if(id==='config') carregarConfig();
+  if(id==='manual') carregarSupervisores();
+}
+async function sair(){await sb.auth.signOut();location.href='../teste/index.html';}
+
+// ── INIT ─────────────────────────────────────────────────────────
+(async()=>{
+  const {data:{user}}=await sb.auth.getUser();
+  if(!user){location.href='../login.html';return;}
+  const {data:up}=await sb.from('usuarios_portal').select('nome,perfil,ativo').eq('id',user.id).single();
+  if(!up||!up.ativo||!['gestor','gestor1','supervisor_geral'].includes(up.perfil)){
+    location.href='../teste/index.html';return;
+  }
+  document.getElementById('hdr-user').textContent=up.nome||user.email;
+  // Registrar acesso
+  await sb.from('usuarios_ultimo_acesso').upsert({user_id:user.id,ultimo_acesso:new Date().toISOString()});
+  // Popular filtros
+  const hoje=new Date();
+  const selMes=document.getElementById('p-mes');
+  for(let i=0;i<12;i++){
+    const d=new Date(hoje.getFullYear(),hoje.getMonth()-i,1);
+    const mm=String(d.getMonth()+1).padStart(2,'0');
+    const val=`${mm}/${d.getFullYear()}`;
+    selMes.innerHTML+=`<option value="${val}">${val}</option>`;
+  }
+  const {data:bases}=await sb.from('local_base').select('base').order('base');
+  const basesUniq=[...new Set((bases||[]).map(r=>r.base).filter(Boolean))];
+  const selBase=document.getElementById('p-base');
+  basesUniq.forEach(b=>selBase.innerHTML+=`<option value="${b}">${b}</option>`);
+  await carregarPainel();
+})();
+
+// ── PAINEL ────────────────────────────────────────────────────────
+async function carregarPainel(){
+  document.getElementById('tbody-painel').innerHTML='<tr><td colspan="9" class="status-msg">Carregando...</td></tr>';
+  const mes=document.getElementById('p-mes').value;
+  const status=document.getElementById('p-status').value;
+  const base=document.getElementById('p-base').value;
+  let q=sb.from('tratativas').select('*').order('created_at',{ascending:false});
+  if(mes) q=q.eq('mes_ref',mes);
+  if(base) q=q.eq('base',base);
+  const {data:trats}=await q;
+  let lista=trats||[];
+  const hoje=new Date(); hoje.setHours(0,0,0,0);
+  // Calcular status
+  lista=lista.map(t=>({...t,
+    status_calc: t.respondida?'respondida': new Date(t.prazo_resposta)<hoje?'atrasada':'aberta'
+  }));
+  if(status) lista=lista.filter(t=>t.status_calc===status);
+  // KPIs
+  document.getElementById('kpi-ab').textContent=lista.filter(t=>t.status_calc==='aberta').length;
+  document.getElementById('kpi-re').textContent=lista.filter(t=>t.status_calc==='respondida').length;
+  document.getElementById('kpi-at').textContent=lista.filter(t=>t.status_calc==='atrasada').length;
+  document.getElementById('kpi-tot').textContent=lista.length;
+  document.getElementById('p-count').textContent=`${lista.length} tratativa(s)`;
+  const TIPO={'impedimentos':'Impedimentos','erros':'Erros leitura','meta':'Meta leituras','inicio_tardio':'Início tardio','manual':'Manual'};
+  const BADGEC={'respondida':'b-re','atrasada':'b-at','aberta':'b-ab'};
+  const BADGET={'respondida':'Respondida','atrasada':'Atrasada','aberta':'Aberta'};
+  document.getElementById('tbody-painel').innerHTML=lista.length?lista.map((t,i)=>`
+    <tr id="tr-${t.id}">
+      <td>${t.supervisor_nome||'—'}</td>
+      <td>${t.base||'—'}</td>
+      <td>${t.nome_leiturista||t.matricula||'—'}</td>
+      <td><span class="badge b-ga">${TIPO[t.tipo]||t.tipo}</span></td>
+      <td style="max-width:200px;font-size:11px">${t.detalhe||'—'}</td>
+      <td>${t.mes_ref||'—'}</td>
+      <td>${t.prazo_resposta?new Date(t.prazo_resposta+'T12:00:00').toLocaleDateString('pt-BR'):'—'}</td>
+      <td><span class="badge ${BADGEC[t.status_calc]}">${BADGET[t.status_calc]}</span></td>
+      <td>${t.respondida?`<button class="btn-ver" onclick="toggleResp(${t.id})">Ver resposta</button>`:'—'}</td>
+    </tr>
+    ${t.respondida?`<tr id="resp-${t.id}" style="display:none"><td colspan="9">
+      <div class="resp-expand">
+        <div class="resp-label">Causa</div><div>${t.causa||'—'}</div>
+        <div class="resp-label">Ação tomada</div><div>${t.acao_tomada||'—'}</div>
+        <div style="font-size:10px;color:#4a7a4a;margin-top:6px">Respondido em ${t.respondida_em?new Date(t.respondida_em).toLocaleString('pt-BR'):'—'}</div>
+      </div>
+    </td></tr>`:''}`)
+  .join(''):'<tr><td colspan="9" class="status-msg">Nenhuma tratativa encontrada.</td></tr>';
+}
+
+function toggleResp(id){
+  const el=document.getElementById(`resp-${id}`);
+  if(!el) return;
+  const vis=el.style.display==='none';
+  el.style.display=vis?'table-row':'none';
+  const btn=document.querySelector(`#tr-${id} .btn-ver`);
+  if(btn) btn.textContent=vis?'Minimizar':'Ver resposta';
+}
+
+// ── CONFIG ────────────────────────────────────────────────────────
+async function carregarConfig(){
+  const {data:cfg}=await sb.from('tratativas_config').select('*').single();
+  if(!cfg){document.getElementById('config-body').innerHTML='<div class="status-msg">Erro ao carregar.</div>';return;}
+  CFG=cfg;
+  document.getElementById('config-body').innerHTML=`
+    <div class="gatilho-row">
+      <span class="g-nome">Impedimentos GBS</span>
+      <span class="g-desc">A cada</span>
+      <input class="inp-s" id="c-imp-qtd" value="${cfg.impedimentos_qtd}">
+      <span class="g-desc">imp. por leiturista</span>
+      <span class="${cfg.impedimentos_ativo?'pill-on':'pill-off'}" onclick="toggleAtivo('impedimentos_ativo',this)">${cfg.impedimentos_ativo?'Ativo':'Inativo'}</span>
+      <button class="btn-pause${cfg.impedimentos_email_pausado?' pausado':''}" onclick="togglePausa('impedimentos_email_pausado',this)">${cfg.impedimentos_email_pausado?'Email pausado':'Pausar email'}</button>
+    </div>
+    <div class="gatilho-row">
+      <span class="g-nome">Erros de leitura</span>
+      <span class="g-desc">A partir de</span>
+      <input class="inp-s" id="c-err-qtd" value="${cfg.erros_qtd}">
+      <span class="g-desc">erros por leiturista</span>
+      <span class="${cfg.erros_ativo?'pill-on':'pill-off'}" onclick="toggleAtivo('erros_ativo',this)">${cfg.erros_ativo?'Ativo':'Inativo'}</span>
+      <button class="btn-pause${cfg.erros_email_pausado?' pausado':''}" onclick="togglePausa('erros_email_pausado',this)">${cfg.erros_email_pausado?'Email pausado':'Pausar email'}</button>
+    </div>
+    <div class="gatilho-row">
+      <span class="g-nome">Meta de leituras</span>
+      <span class="g-desc">Urbano</span><input class="inp-s" id="c-meta-urb" value="${cfg.meta_urb}">
+      <span class="g-desc">Rural</span><input class="inp-s" id="c-meta-rur" value="${cfg.meta_rur}">
+      <span class="${cfg.meta_ativo?'pill-on':'pill-off'}" onclick="toggleAtivo('meta_ativo',this)">${cfg.meta_ativo?'Ativo':'Inativo'}</span>
+      <button class="btn-pause${cfg.meta_email_pausado?' pausado':''}" onclick="togglePausa('meta_email_pausado',this)">${cfg.meta_email_pausado?'Email pausado':'Pausar email'}</button>
+    </div>
+    <div class="gatilho-row">
+      <span class="g-nome">Início tardio</span>
+      <span class="g-desc">Acima de</span>
+      <input class="inp-s" id="c-ini-hora" value="${cfg.inicio_tardio_hora}" style="width:70px">
+      <span class="${cfg.inicio_tardio_ativo?'pill-on':'pill-off'}" onclick="toggleAtivo('inicio_tardio_ativo',this)">${cfg.inicio_tardio_ativo?'Ativo':'Inativo'}</span>
+      <button class="btn-pause${cfg.inicio_tardio_email_pausado?' pausado':''}" onclick="togglePausa('inicio_tardio_email_pausado',this)">${cfg.inicio_tardio_email_pausado?'Email pausado':'Pausar email'}</button>
+    </div>
+    <div class="gatilho-row">
+      <span class="g-nome">Velocidade</span>
+      <span class="g-desc">Acima de</span>
+      <input class="inp-s" value="${cfg.velocidade_kmh}" disabled style="opacity:.4">
+      <span class="g-desc">km/h — módulo em implantação</span>
+    </div>
+    <div style="border-top:0.5px solid #e0eee0;padding-top:10px;margin-top:4px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <span class="g-nome">Prazo de resposta</span>
+      <span class="g-desc">Supervisor tem</span>
+      <input class="inp-s" id="c-prazo" value="${cfg.prazo_dias}" style="width:50px">
+      <span class="g-desc">dias · lembrete 1 dia antes se prazo > 2 dias e não respondido</span>
+    </div>
+    <div style="display:flex;justify-content:flex-end;margin-top:12px">
+      <button class="btn-verde" onclick="salvarConfig()">Salvar configurações</button>
+    </div>
+    <div class="msg" id="cfg-msg"></div>`;
+}
+
+async function toggleAtivo(campo,el){
+  const senha=prompt('Senha para alterar:');
+  if(senha!=='GBS@2026'){if(senha!==null)alert('Senha incorreta.');return;}
+  const novoVal=!CFG[campo];
+  await sb.from('tratativas_config').update({[campo]:novoVal}).eq('id',CFG.id);
+  CFG[campo]=novoVal;
+  el.className=novoVal?'pill-on':'pill-off';
+  el.textContent=novoVal?'Ativo':'Inativo';
+}
+
+async function togglePausa(campo,btn){
+  const senha=prompt('Senha para alterar:');
+  if(senha!=='GBS@2026'){if(senha!==null)alert('Senha incorreta.');return;}
+  const novoVal=!CFG[campo];
+  await sb.from('tratativas_config').update({[campo]:novoVal}).eq('id',CFG.id);
+  CFG[campo]=novoVal;
+  btn.className='btn-pause'+(novoVal?' pausado':'');
+  btn.textContent=novoVal?'Email pausado':'Pausar email';
+}
+
+async function salvarConfig(){
+  const updates={
+    impedimentos_qtd:parseInt(document.getElementById('c-imp-qtd').value)||10,
+    erros_qtd:parseInt(document.getElementById('c-err-qtd').value)||1,
+    meta_urb:parseInt(document.getElementById('c-meta-urb').value)||100,
+    meta_rur:parseInt(document.getElementById('c-meta-rur').value)||60,
+    inicio_tardio_hora:document.getElementById('c-ini-hora').value||'09:00',
+    prazo_dias:parseInt(document.getElementById('c-prazo').value)||5,
+    updated_at:new Date().toISOString(),
+  };
+  const {error}=await sb.from('tratativas_config').update(updates).eq('id',CFG.id);
+  const msg=document.getElementById('cfg-msg');
+  if(error){msg.className='msg erro';msg.textContent='Erro ao salvar.';}
+  else{msg.className='msg ok';msg.textContent='✓ Configurações salvas!';Object.assign(CFG,updates);}
+}
+
+// ── MANUAL ────────────────────────────────────────────────────────
+async function carregarSupervisores(){
+  const {data}=await sb.from('usuarios_portal').select('id,nome,email,base')
+    .in('perfil',['supervisor']).eq('ativo',true).order('nome');
+  const sel=document.getElementById('m-sup');
+  sel.innerHTML='<option value="">Selecione...</option>';
+  (data||[]).forEach(s=>sel.innerHTML+=`<option value="${s.id}" data-email="${s.email}" data-nome="${s.nome}">${s.nome} — ${s.base||'Todas'}</option>`);
+}
+
+async function enviarManual(){
+  const sel=document.getElementById('m-sup');
+  const opt=sel.options[sel.selectedIndex];
+  const msg=document.getElementById('m-msg').value.trim();
+  const status=document.getElementById('m-msg-status');
+  if(!sel.value||!msg){status.className='msg erro';status.textContent='Selecione o supervisor e escreva a mensagem.';return;}
+  status.className='msg';status.textContent='Enviando...';
+  const supId=sel.value;
+  const supEmail=opt.dataset.email;
+  const supNome=opt.dataset.nome;
+  // Salvar tratativa manual
+  const {data:trat}=await sb.from('tratativas').insert({
+    tipo:'manual', automatica:false,
+    supervisor_id:supId, supervisor_email:supEmail, supervisor_nome:supNome,
+    detalhe:msg,
+    prazo_resposta:new Date(Date.now()+5*86400000).toISOString().split('T')[0],
+  }).select().single();
+  // Enviar email
+  const link=`${location.origin}/controles/tratativas/responder.html?id=${trat?.id}`;
+  await fetch(`${SUPABASE_URL}/functions/v1/enviar-email`,{
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':`Bearer ${SUPABASE_KEY}`},
+    body:JSON.stringify({
+      para:supEmail,
+      assunto:'[GBS] Tratativa manual — ação necessária',
+      corpo:`<p>Olá, ${supNome}!</p><p>${msg}</p><p><a href="${link}">Clique aqui para registrar a tratativa</a></p><p>GBS Serviços</p>`
+    })
+  });
+  status.className='msg ok';status.textContent=`✓ Email enviado para ${supNome}!`;
+  document.getElementById('m-msg').value='';
+  sel.value='';
+}
+</script>
+</body>
+</html>
