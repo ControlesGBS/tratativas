@@ -294,6 +294,24 @@ async function carregarConfig(){
       <span class="${cfg.inicio_tardio_ativo?'pill-on':'pill-off'}" onclick="toggleAtivo('inicio_tardio_ativo',this)">${cfg.inicio_tardio_ativo?'Ativo':'Inativo'}</span>
       <button class="btn-pause${cfg.inicio_tardio_email_pausado?' pausado':''}" onclick="togglePausa('inicio_tardio_email_pausado',this)">${cfg.inicio_tardio_email_pausado?'Email pausado':'Pausar email'}</button>
     </div>
+    <div class="gatilho-row" id="gatilho-transmissoes">
+      <span class="g-nome">Transmissões pendentes</span>
+      <span class="g-desc">ULs com leitura atrasada</span>
+      <span class="${cfg.transmissoes_ativo?'pill-on':'pill-off'}" onclick="toggleAtivo('transmissoes_ativo',this)">${cfg.transmissoes_ativo?'Ativo':'Inativo'}</span>
+      <button class="btn-verde" style="margin-left:auto" onclick="abrirDisparoTransmissoes()">Ver pendentes e disparar</button>
+    </div>
+    <div id="painel-transmissoes" style="display:none;background:#f0f8f0;border:0.5px solid #c0dcc0;border-radius:6px;padding:12px;margin:-8px 0 8px 0">
+      <div id="lista-transmissoes-pendentes"><span style="color:#4a7a4a;font-size:12px">Carregando...</span></div>
+    </div>
+    <div class="gatilho-row" id="gatilho-releituras">
+      <span class="g-nome">Releituras pendentes</span>
+      <span class="g-desc">ULs com releitura próxima do vencimento</span>
+      <span class="${cfg.releituras_ativo?'pill-on':'pill-off'}" onclick="toggleAtivo('releituras_ativo',this)">${cfg.releituras_ativo?'Ativo':'Inativo'}</span>
+      <button class="btn-verde" style="margin-left:auto" onclick="abrirDisparoReleituras()">Ver pendentes e disparar</button>
+    </div>
+    <div id="painel-releituras" style="display:none;background:#f0f8f0;border:0.5px solid #c0dcc0;border-radius:6px;padding:12px;margin:-8px 0 8px 0">
+      <div id="lista-releituras-pendentes"><span style="color:#4a7a4a;font-size:12px">Carregando...</span></div>
+    </div>
     <div class="gatilho-row">
       <span class="g-nome">Velocidade</span>
       <span class="g-desc">Acima de</span>
@@ -350,7 +368,7 @@ async function salvarConfig(){
 
 // ── TEMPLATE DE EMAIL ─────────────────────────────────────────────
 function montarEmail({supNome, base, tipo, ocorrencia, prazoStr, link}){
-  const TIPO_LABEL={'impedimentos':'Impedimentos GBS','erros':'Erros de leitura','meta':'Meta de leituras','inicio_tardio':'Início tardio','manual':'Manual'};
+  const TIPO_LABEL={'impedimentos':'Impedimentos GBS','erros':'Erros de leitura','meta':'Meta de leituras','inicio_tardio':'Início tardio','manual':'Manual','transmissoes':'Transmissões pendentes','releituras':'Releituras pendentes'};
   const tipoLabel=TIPO_LABEL[tipo]||tipo;
   return {
     assunto:'Gestão de Controles - Ação atribuída a você',
@@ -377,6 +395,206 @@ function montarEmail({supNome, base, tipo, ocorrencia, prazoStr, link}){
   </div>
 </div>`
   };
+}
+
+// ── TRANSMISSÕES / RELEITURAS ─────────────────────────────────────
+function diasCorridos(dataStr){
+  if(!dataStr) return null;
+  const hoje=new Date(); hoje.setHours(0,0,0,0);
+  const d=new Date(dataStr+'T12:00:00'); d.setHours(0,0,0,0);
+  return Math.floor((hoje-d)/(1000*60*60*24));
+}
+
+async function abrirDisparoTransmissoes(){
+  const painel=document.getElementById('painel-transmissoes');
+  if(painel.style.display!=='none'){painel.style.display='none';return;}
+  painel.style.display='block';
+  const lista=document.getElementById('lista-transmissoes-pendentes');
+  lista.innerHTML='<span style="color:#4a7a4a;font-size:12px">Carregando...</span>';
+
+  // Buscar mês atual
+  const hoje=new Date();
+  const mesRef=`${hoje.getFullYear()}-${String(hoje.getMonth()+1).padStart(2,'0')}-01`;
+
+  // Buscar calendário de leitura
+  const {data:cal}=await sb.from('calendario_leitura').select('rz,data_leitura').eq('mes_ref',mesRef);
+  const calMap={};
+  (cal||[]).forEach(r=>{ calMap[r.rz]=r.data_leitura; });
+
+  // Buscar transmissões do mês
+  const {data:trans}=await sb.from('transmissoes').select('ul,rz,base,cidade').eq('mes_ref',mesRef);
+
+  // Filtrar atrasadas
+  const hojeD=new Date(); hojeD.setHours(0,0,0,0);
+  const atrasadas=(trans||[]).filter(r=>{
+    const dl=calMap[r.rz];
+    if(!dl) return false;
+    const d=new Date(dl+'T12:00:00'); d.setHours(0,0,0,0);
+    return d<hojeD;
+  }).map(r=>({...r, dataLim:calMap[r.rz], dias:diasCorridos(calMap[r.rz])}));
+
+  if(!atrasadas.length){
+    lista.innerHTML='<span style="color:#2d7a2d;font-size:12px">✓ Nenhuma transmissão pendente.</span>';
+    return;
+  }
+
+  // Buscar supervisores por base
+  const {data:sups}=await sb.from('usuarios_portal').select('nome,email,base').in('perfil',['supervisor']).eq('ativo',true);
+  const supMap={};
+  (sups||[]).forEach(s=>{ if(s.base) supMap[s.base.toUpperCase()]=s; });
+
+  // Agrupar por base
+  const porBase={};
+  atrasadas.forEach(r=>{
+    const b=(r.base||'—').toUpperCase();
+    if(!porBase[b]) porBase[b]=[];
+    porBase[b].push(r);
+  });
+
+  let html=`<div style="font-size:12px;margin-bottom:8px;color:#1a4a1a;font-weight:500">${atrasadas.length} ULs atrasadas em ${Object.keys(porBase).length} bases</div>`;
+  html+=`<table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:10px">
+    <thead><tr style="background:#1a4a1a;color:#c0e8c0">
+      <th style="padding:5px 8px;text-align:left">Base</th>
+      <th style="padding:5px 8px">ULs</th>
+      <th style="padding:5px 8px">Supervisor</th>
+      <th style="padding:5px 8px">Dias pend.</th>
+      <th style="padding:5px 8px">Prazo resp.</th>
+      <th style="padding:5px 8px">Ação</th>
+    </tr></thead><tbody>`;
+
+  Object.entries(porBase).forEach(([base, uls])=>{
+    const sup=supMap[base];
+    const maxDias=Math.max(...uls.map(u=>u.dias||0));
+    const inputId=`prazo-trans-${base.replace(/\s/g,'_')}`;
+    html+=`<tr style="border-bottom:0.5px solid #c0dcc0">
+      <td style="padding:5px 8px;font-weight:500">${base}</td>
+      <td style="padding:5px 8px;text-align:center">${uls.length}</td>
+      <td style="padding:5px 8px">${sup?sup.nome:'<span style="color:#c00">Sem supervisor</span>'}</td>
+      <td style="padding:5px 8px;text-align:center;color:${maxDias>3?'#c00':'#b45309'}">${maxDias} dia(s)</td>
+      <td style="padding:5px 8px;text-align:center"><input type="date" id="${inputId}" style="font-size:11px;padding:2px 4px;border:0.5px solid #a0c8a0;border-radius:4px;width:110px"></td>
+      <td style="padding:5px 8px;text-align:center">
+        ${sup?`<button onclick="dispararTransmissao('${base}',${JSON.stringify(uls.length)},'${sup.nome}','${sup.email}','${inputId}')" style="background:#2d7a2d;color:#fff;border:none;padding:3px 8px;border-radius:4px;cursor:pointer;font-size:11px">Disparar</button>`:'—'}
+      </td>
+    </tr>`;
+  });
+  html+=`</tbody></table>`;
+  lista.innerHTML=html;
+}
+
+async function dispararTransmissao(base, qtdUls, supNome, supEmail, inputId){
+  const senha=prompt('Senha para disparar:');
+  if(senha!=='GBS@2026'){if(senha!==null)alert('Senha incorreta.');return;}
+  const prazoInp=document.getElementById(inputId).value;
+  if(!prazoInp){alert('Defina o prazo de resposta antes de disparar.');return;}
+  const prazoStr=new Date(prazoInp+'T12:00:00').toLocaleDateString('pt-BR');
+  const ocorrencia=`${qtdUls} UL(s) com leitura pendente de transmissão na base ${base}.`;
+  const {data:trat}=await sb.from('tratativas').insert({
+    tipo:'transmissoes', automatica:false,
+    supervisor_nome:supNome, supervisor_email:supEmail, base,
+    detalhe:ocorrencia, prazo_resposta:prazoInp,
+  }).select().single();
+  const link=`${location.origin}/controles/tratativas/responder.html?id=${trat?.id}`;
+  const {assunto,corpo}=montarEmail({supNome,base,tipo:'transmissoes',ocorrencia,prazoStr,link});
+  await fetch(`${SUPABASE_URL}/functions/v1/enviar-email`,{
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':`Bearer ${SUPABASE_KEY}`},
+    body:JSON.stringify({para:supEmail,assunto,corpo})
+  });
+  alert(`✓ Email enviado para ${supNome}!`);
+}
+
+async function abrirDisparoReleituras(){
+  const painel=document.getElementById('painel-releituras');
+  if(painel.style.display!=='none'){painel.style.display='none';return;}
+  painel.style.display='block';
+  const lista=document.getElementById('lista-releituras-pendentes');
+  lista.innerHTML='<span style="color:#4a7a4a;font-size:12px">Carregando...</span>';
+
+  const hoje=new Date(); hoje.setHours(0,0,0,0);
+  const mesRef=`${hoje.getFullYear()}-${String(hoje.getMonth()+1).padStart(2,'0')}-01`;
+  const {data:reles}=await sb.from('releituras').select('ul,rz,base,vencimento').eq('mes_ref',mesRef);
+
+  // Filtrar com vencimento chegando (até 5 dias) ou já vencido
+  const pendentes=(reles||[]).filter(r=>{
+    if(!r.vencimento) return false;
+    const d=new Date(r.vencimento+'T12:00:00'); d.setHours(0,0,0,0);
+    const diff=Math.floor((d-hoje)/(1000*60*60*24));
+    return diff<=5;
+  }).map(r=>{
+    const d=new Date(r.vencimento+'T12:00:00'); d.setHours(0,0,0,0);
+    const diff=Math.floor((d-hoje)/(1000*60*60*24));
+    return {...r, diff};
+  });
+
+  if(!pendentes.length){
+    lista.innerHTML='<span style="color:#2d7a2d;font-size:12px">✓ Nenhuma releitura pendente.</span>';
+    return;
+  }
+
+  const {data:sups}=await sb.from('usuarios_portal').select('nome,email,base').in('perfil',['supervisor']).eq('ativo',true);
+  const supMap={};
+  (sups||[]).forEach(s=>{ if(s.base) supMap[s.base.toUpperCase()]=s; });
+
+  const porBase={};
+  pendentes.forEach(r=>{
+    const b=(r.base||'—').toUpperCase();
+    if(!porBase[b]) porBase[b]=[];
+    porBase[b].push(r);
+  });
+
+  let html=`<div style="font-size:12px;margin-bottom:8px;color:#1a4a1a;font-weight:500">${pendentes.length} ULs com releitura próxima ou vencida</div>`;
+  html+=`<table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:10px">
+    <thead><tr style="background:#1a4a1a;color:#c0e8c0">
+      <th style="padding:5px 8px;text-align:left">Base</th>
+      <th style="padding:5px 8px">ULs</th>
+      <th style="padding:5px 8px">Supervisor</th>
+      <th style="padding:5px 8px">Situação</th>
+      <th style="padding:5px 8px">Prazo resp.</th>
+      <th style="padding:5px 8px">Ação</th>
+    </tr></thead><tbody>`;
+
+  Object.entries(porBase).forEach(([base, uls])=>{
+    const sup=supMap[base];
+    const vencidas=uls.filter(u=>u.diff<0).length;
+    const proximas=uls.filter(u=>u.diff>=0).length;
+    const situacao=vencidas?`<span style="color:#c00">${vencidas} vencida(s)</span>${proximas?` + ${proximas} próxima(s)`:''}`:
+      `<span style="color:#b45309">${proximas} próxima(s)</span>`;
+    const inputId=`prazo-rele-${base.replace(/\s/g,'_')}`;
+    html+=`<tr style="border-bottom:0.5px solid #c0dcc0">
+      <td style="padding:5px 8px;font-weight:500">${base}</td>
+      <td style="padding:5px 8px;text-align:center">${uls.length}</td>
+      <td style="padding:5px 8px">${sup?sup.nome:'<span style="color:#c00">Sem supervisor</span>'}</td>
+      <td style="padding:5px 8px">${situacao}</td>
+      <td style="padding:5px 8px;text-align:center"><input type="date" id="${inputId}" style="font-size:11px;padding:2px 4px;border:0.5px solid #a0c8a0;border-radius:4px;width:110px"></td>
+      <td style="padding:5px 8px;text-align:center">
+        ${sup?`<button onclick="dispararReleitura('${base}',${JSON.stringify(uls.length)},'${sup.nome}','${sup.email}','${inputId}')" style="background:#2d7a2d;color:#fff;border:none;padding:3px 8px;border-radius:4px;cursor:pointer;font-size:11px">Disparar</button>`:'—'}
+      </td>
+    </tr>`;
+  });
+  html+=`</tbody></table>`;
+  lista.innerHTML=html;
+}
+
+async function dispararReleitura(base, qtdUls, supNome, supEmail, inputId){
+  const senha=prompt('Senha para disparar:');
+  if(senha!=='GBS@2026'){if(senha!==null)alert('Senha incorreta.');return;}
+  const prazoInp=document.getElementById(inputId).value;
+  if(!prazoInp){alert('Defina o prazo de resposta antes de disparar.');return;}
+  const prazoStr=new Date(prazoInp+'T12:00:00').toLocaleDateString('pt-BR');
+  const ocorrencia=`${qtdUls} UL(s) com releitura pendente ou próxima do vencimento na base ${base}.`;
+  const {data:trat}=await sb.from('tratativas').insert({
+    tipo:'releituras', automatica:false,
+    supervisor_nome:supNome, supervisor_email:supEmail, base,
+    detalhe:ocorrencia, prazo_resposta:prazoInp,
+  }).select().single();
+  const link=`${location.origin}/controles/tratativas/responder.html?id=${trat?.id}`;
+  const {assunto,corpo}=montarEmail({supNome,base,tipo:'releituras',ocorrencia,prazoStr,link});
+  await fetch(`${SUPABASE_URL}/functions/v1/enviar-email`,{
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':`Bearer ${SUPABASE_KEY}`},
+    body:JSON.stringify({para:supEmail,assunto,corpo})
+  });
+  alert(`✓ Email enviado para ${supNome}!`);
 }
 
 // ── MANUAL ────────────────────────────────────────────────────────
