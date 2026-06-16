@@ -294,24 +294,6 @@ async function carregarConfig(){
       <span class="${cfg.inicio_tardio_ativo?'pill-on':'pill-off'}" onclick="toggleAtivo('inicio_tardio_ativo',this)">${cfg.inicio_tardio_ativo?'Ativo':'Inativo'}</span>
       <button class="btn-pause${cfg.inicio_tardio_email_pausado?' pausado':''}" onclick="togglePausa('inicio_tardio_email_pausado',this)">${cfg.inicio_tardio_email_pausado?'Email pausado':'Pausar email'}</button>
     </div>
-    <div class="gatilho-row" id="gatilho-transmissoes">
-      <span class="g-nome">Transmissões pendentes</span>
-      <span class="g-desc">ULs com leitura atrasada</span>
-      <span class="${cfg.transmissoes_ativo?'pill-on':'pill-off'}" onclick="toggleAtivo('transmissoes_ativo',this)">${cfg.transmissoes_ativo?'Ativo':'Inativo'}</span>
-      <button class="btn-verde" style="margin-left:auto" onclick="abrirDisparoTransmissoes()">Ver pendentes e disparar</button>
-    </div>
-    <div id="painel-transmissoes" style="display:none;background:#f0f8f0;border:0.5px solid #c0dcc0;border-radius:6px;padding:12px;margin:-8px 0 8px 0">
-      <div id="lista-transmissoes-pendentes"><span style="color:#4a7a4a;font-size:12px">Carregando...</span></div>
-    </div>
-    <div class="gatilho-row" id="gatilho-releituras">
-      <span class="g-nome">Releituras pendentes</span>
-      <span class="g-desc">ULs com releitura próxima do vencimento</span>
-      <span class="${cfg.releituras_ativo?'pill-on':'pill-off'}" onclick="toggleAtivo('releituras_ativo',this)">${cfg.releituras_ativo?'Ativo':'Inativo'}</span>
-      <button class="btn-verde" style="margin-left:auto" onclick="abrirDisparoReleituras()">Ver pendentes e disparar</button>
-    </div>
-    <div id="painel-releituras" style="display:none;background:#f0f8f0;border:0.5px solid #c0dcc0;border-radius:6px;padding:12px;margin:-8px 0 8px 0">
-      <div id="lista-releituras-pendentes"><span style="color:#4a7a4a;font-size:12px">Carregando...</span></div>
-    </div>
     <div class="gatilho-row">
       <span class="g-nome">Velocidade</span>
       <span class="g-desc">Acima de</span>
