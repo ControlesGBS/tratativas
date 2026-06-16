@@ -264,41 +264,51 @@ async function carregarConfig(){
   if(!cfg){document.getElementById('config-body').innerHTML='<div class="status-msg">Erro ao carregar.</div>';return;}
   CFG=cfg;
   document.getElementById('config-body').innerHTML=`
-    <div style="display:grid;grid-template-columns:180px 1fr auto auto auto auto;align-items:center;gap:8px;padding:6px 0;border-bottom:0.5px solid #e0eee0;font-size:11px;color:#4a7a4a;font-weight:500">
-      <span>Gatilho</span><span>Configuração</span><span>Prazo (dias)</span><span>Status</span><span>Email</span><span></span>
-    </div>
-    <div class="gatilho-row" style="display:grid;grid-template-columns:180px 1fr auto auto auto auto;align-items:center;gap:8px">
+    <div class="gatilho-row">
       <span class="g-nome">Impedimentos GBS</span>
-      <span class="g-desc">A cada <input class="inp-s" id="c-imp-qtd" value="${cfg.impedimentos_qtd}" style="width:50px;margin:0 4px"> imp. por leiturista</span>
-      <input class="inp-s" id="c-prazo-imp" value="${cfg.prazo_imp||5}" style="width:55px;text-align:center" title="Prazo em dias">
+      <span class="g-desc">A cada</span>
+      <input class="inp-s" id="c-imp-qtd" value="${cfg.impedimentos_qtd}">
+      <span class="g-desc">imp. por leiturista &nbsp;·&nbsp; Prazo:</span>
+      <input class="inp-s" id="c-prazo-imp" value="${cfg.prazo_imp||5}" style="width:45px;text-align:center">
+      <span class="g-desc">dias</span>
       <span class="${cfg.impedimentos_ativo?'pill-on':'pill-off'}" onclick="toggleAtivo('impedimentos_ativo',this)">${cfg.impedimentos_ativo?'Ativo':'Inativo'}</span>
       <button class="btn-pause${cfg.impedimentos_email_pausado?' pausado':''}" onclick="togglePausa('impedimentos_email_pausado',this)">${cfg.impedimentos_email_pausado?'Email pausado':'Pausar email'}</button>
     </div>
-    <div class="gatilho-row" style="display:grid;grid-template-columns:180px 1fr auto auto auto auto;align-items:center;gap:8px">
+    <div class="gatilho-row">
       <span class="g-nome">Erros de leitura</span>
-      <span class="g-desc">A partir de <input class="inp-s" id="c-err-qtd" value="${cfg.erros_qtd}" style="width:50px;margin:0 4px"> erros por leiturista</span>
-      <input class="inp-s" id="c-prazo-err" value="${cfg.prazo_err||5}" style="width:55px;text-align:center" title="Prazo em dias">
+      <span class="g-desc">A partir de</span>
+      <input class="inp-s" id="c-err-qtd" value="${cfg.erros_qtd}">
+      <span class="g-desc">erros por leiturista &nbsp;·&nbsp; Prazo:</span>
+      <input class="inp-s" id="c-prazo-err" value="${cfg.prazo_err||5}" style="width:45px;text-align:center">
+      <span class="g-desc">dias</span>
       <span class="${cfg.erros_ativo?'pill-on':'pill-off'}" onclick="toggleAtivo('erros_ativo',this)">${cfg.erros_ativo?'Ativo':'Inativo'}</span>
       <button class="btn-pause${cfg.erros_email_pausado?' pausado':''}" onclick="togglePausa('erros_email_pausado',this)">${cfg.erros_email_pausado?'Email pausado':'Pausar email'}</button>
     </div>
-    <div class="gatilho-row" style="display:grid;grid-template-columns:180px 1fr auto auto auto auto;align-items:center;gap:8px">
+    <div class="gatilho-row">
       <span class="g-nome">Meta de leituras</span>
-      <span class="g-desc">Urbano <input class="inp-s" id="c-meta-urb" value="${cfg.meta_urb}" style="width:50px;margin:0 4px"> Rural <input class="inp-s" id="c-meta-rur" value="${cfg.meta_rur}" style="width:50px;margin:0 4px"></span>
-      <input class="inp-s" id="c-prazo-meta" value="${cfg.prazo_meta||5}" style="width:55px;text-align:center" title="Prazo em dias">
+      <span class="g-desc">Urbano</span><input class="inp-s" id="c-meta-urb" value="${cfg.meta_urb}">
+      <span class="g-desc">Rural</span><input class="inp-s" id="c-meta-rur" value="${cfg.meta_rur}">
+      <span class="g-desc">&nbsp;·&nbsp; Prazo:</span>
+      <input class="inp-s" id="c-prazo-meta" value="${cfg.prazo_meta||5}" style="width:45px;text-align:center">
+      <span class="g-desc">dias</span>
       <span class="${cfg.meta_ativo?'pill-on':'pill-off'}" onclick="toggleAtivo('meta_ativo',this)">${cfg.meta_ativo?'Ativo':'Inativo'}</span>
       <button class="btn-pause${cfg.meta_email_pausado?' pausado':''}" onclick="togglePausa('meta_email_pausado',this)">${cfg.meta_email_pausado?'Email pausado':'Pausar email'}</button>
     </div>
-    <div class="gatilho-row" style="display:grid;grid-template-columns:180px 1fr auto auto auto auto;align-items:center;gap:8px">
+    <div class="gatilho-row">
       <span class="g-nome">Início tardio</span>
-      <span class="g-desc">Acima de <input class="inp-s" id="c-ini-hora" value="${cfg.inicio_tardio_hora}" style="width:70px;margin:0 4px"></span>
-      <input class="inp-s" id="c-prazo-ini" value="${cfg.prazo_ini||5}" style="width:55px;text-align:center" title="Prazo em dias">
+      <span class="g-desc">Acima de</span>
+      <input class="inp-s" id="c-ini-hora" value="${cfg.inicio_tardio_hora}" style="width:70px">
+      <span class="g-desc">&nbsp;·&nbsp; Prazo:</span>
+      <input class="inp-s" id="c-prazo-ini" value="${cfg.prazo_ini||5}" style="width:45px;text-align:center">
+      <span class="g-desc">dias</span>
       <span class="${cfg.inicio_tardio_ativo?'pill-on':'pill-off'}" onclick="toggleAtivo('inicio_tardio_ativo',this)">${cfg.inicio_tardio_ativo?'Ativo':'Inativo'}</span>
       <button class="btn-pause${cfg.inicio_tardio_email_pausado?' pausado':''}" onclick="togglePausa('inicio_tardio_email_pausado',this)">${cfg.inicio_tardio_email_pausado?'Email pausado':'Pausar email'}</button>
     </div>
-    <div class="gatilho-row" style="display:grid;grid-template-columns:180px 1fr auto auto auto auto;align-items:center;gap:8px">
+    <div class="gatilho-row">
       <span class="g-nome">Velocidade</span>
-      <span class="g-desc">Acima de <input class="inp-s" value="${cfg.velocidade_kmh}" disabled style="width:50px;margin:0 4px;opacity:.4"> km/h — em implantação</span>
-      <span></span><span></span><span></span>
+      <span class="g-desc">Acima de</span>
+      <input class="inp-s" value="${cfg.velocidade_kmh}" disabled style="opacity:.4">
+      <span class="g-desc">km/h — módulo em implantação</span>
     </div>
     <div style="display:flex;justify-content:flex-end;margin-top:12px">
       <button class="btn-verde" onclick="salvarConfig()">Salvar configurações</button>
