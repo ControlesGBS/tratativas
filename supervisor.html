@@ -46,7 +46,6 @@ tbody td{padding:7px 10px;color:#1a2a1a;vertical-align:middle}
 <body>
 <div class="hdr">
   <div class="hdr-logo"><img src="logo_gbs.png" alt="GBS"></div>
-  <a href="/controles/teste/index.html" title="Início" style="color:#c8e8c8;text-decoration:none;font-size:18px;line-height:1">🏠</a>
   <div class="hdr-title">MINHAS TRATATIVAS</div>
   <span class="hdr-user" id="hdr-user"></span>
   <button class="btn-sair" onclick="sair()">Sair</button>
@@ -99,12 +98,14 @@ async function sair(){await sb.auth.signOut();location.href='/controles/teste/in
 (async()=>{
   const {data:{user}}=await sb.auth.getUser();
   if(!user){location.href='/controles/teste/index.html';return;}
-  const {data:up}=await sb.from('usuarios_portal').select('nome,perfil,ativo').eq('id',user.id).single();
+  const {data:up}=await sb.from('usuarios_portal').select('nome,perfil,ativo,base').eq('id',user.id).single();
   if(!up||!up.ativo){location.href='/controles/teste/index.html';return;}
   document.getElementById('hdr-user').textContent=up.nome||user.email;
 
-  const {data:trats}=await sb.from('tratativas')
-    .select('*').eq('supervisor_id',user.id).order('created_at',{ascending:false});
+  let q=sb.from('tratativas').select('*').order('created_at',{ascending:false});
+  if(up.base) q=q.filter('base','ilike',up.base);
+  else q=q.eq('supervisor_id',user.id);
+  const {data:trats}=await q;
   LISTA=trats||[];
 
   // Popular filtro meses
