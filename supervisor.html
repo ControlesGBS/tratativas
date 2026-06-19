@@ -139,7 +139,7 @@ function renderTabela(){
   document.getElementById('tbody').innerHTML=lista.length?lista.map(t=>`
     <tr>
       <td><span class="badge b-ga">${TIPO[t.tipo]||t.tipo}</span></td>
-      <td style="max-width:220px;font-size:11px">${t.detalhe||'—'}</td>
+      <td style="max-width:280px">${t.detalhe||'—'}</td>
       <td>${t.mes_ref||'—'}</td>
       <td>${t.prazo_resposta?new Date(t.prazo_resposta+'T12:00:00').toLocaleDateString('pt-BR'):'—'}</td>
       <td>
