@@ -235,6 +235,19 @@ async function carregarPainel(){
             <span style="font-size:9px;color:#4a7a4a;text-transform:uppercase;letter-spacing:.2px;margin-top:4px;display:block">Ação tomada</span>
             <span>${t.acao_tomada||'—'}</span><br>
             <span style="font-size:10px;color:#4a7a4a">${t.respondida_em?new Date(t.respondida_em).toLocaleString('pt-BR'):''}</span>
+
+            ${t.replica?`
+              <div style="margin-top:8px;background:#fdf3e8;border-left:3px solid #d97706;padding:6px 8px;border-radius:4px">
+                <span style="font-size:9px;color:#854f0b;text-transform:uppercase;letter-spacing:.2px">Réplica do gestor</span><br>
+                <span>${t.replica}</span><br>
+                <span style="font-size:10px;color:#854f0b">${t.replica_em?new Date(t.replica_em).toLocaleString('pt-BR'):''}</span>
+              </div>`:''}
+
+            <button onclick="abrirFormReplica(${t.id})" style="margin-top:6px;background:none;border:0.5px solid #d97706;color:#854f0b;border-radius:4px;padding:3px 8px;font-size:10px;cursor:pointer">${t.replica?'Editar réplica':'Não concordo / Replicar'}</button>
+            <div id="form-replica-${t.id}" style="display:none;margin-top:6px">
+              <textarea id="txt-replica-${t.id}" rows="2" placeholder="Explique por que você não concorda com a resposta..." style="width:100%;border:0.5px solid #d97706;border-radius:4px;padding:6px;font-size:11px;font-family:inherit;resize:vertical">${t.replica||''}</textarea>
+              <button onclick="salvarReplica(${t.id})" style="margin-top:4px;background:#d97706;color:#fff;border:none;border-radius:4px;padding:3px 10px;font-size:10px;cursor:pointer">Salvar réplica</button>
+            </div>
           </div>`:'—'}
       </td>
       <td><button onclick="deletarTratativa(${t.id})" style="background:none;border:0.5px solid #f09595;color:#a32d2d;border-radius:4px;padding:3px 8px;font-size:10px;cursor:pointer">Deletar</button></td>
@@ -256,6 +269,19 @@ function toggleResp(id,btn){
   const vis=el.style.display==='none';
   el.style.display=vis?'block':'none';
   btn.textContent=vis?'Minimizar':'Ver resposta';
+}
+
+function abrirFormReplica(id){
+  const form=document.getElementById(`form-replica-${id}`);
+  if(!form) return;
+  form.style.display=form.style.display==='none'?'block':'none';
+}
+
+async function salvarReplica(id){
+  const txt=document.getElementById(`txt-replica-${id}`).value.trim();
+  if(!txt){alert('Escreva a réplica antes de salvar.');return;}
+  await sb.from('tratativas').update({replica:txt,replica_em:new Date().toISOString()}).eq('id',id);
+  await carregarPainel();
 }
 
 // ── CONFIG ────────────────────────────────────────────────────────
