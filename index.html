@@ -243,10 +243,10 @@ async function carregarPainel(){
                 <span style="font-size:10px;color:#854f0b">${t.replica_em?new Date(t.replica_em).toLocaleString('pt-BR'):''}</span>
               </div>`:''}
 
-            <button onclick="abrirFormReplica(${t.id})" style="margin-top:6px;background:none;border:0.5px solid #d97706;color:#854f0b;border-radius:4px;padding:3px 8px;font-size:10px;cursor:pointer">${t.replica?'Editar réplica':'Não concordo / Replicar'}</button>
+            <button onclick="abrirFormReplica(${t.id})" style="margin-top:6px;background:none;border:0.5px solid #d97706;color:#854f0b;border-radius:4px;padding:3px 8px;font-size:10px;cursor:pointer">${t.replica?'Editar réplica':'Replicar'}</button>
             <div id="form-replica-${t.id}" style="display:none;margin-top:6px">
               <textarea id="txt-replica-${t.id}" rows="2" placeholder="Explique por que você não concorda com a resposta..." style="width:100%;border:0.5px solid #d97706;border-radius:4px;padding:6px;font-size:11px;font-family:inherit;resize:vertical">${t.replica||''}</textarea>
-              <button onclick="salvarReplica(${t.id})" style="margin-top:4px;background:#d97706;color:#fff;border:none;border-radius:4px;padding:3px 10px;font-size:10px;cursor:pointer">Salvar réplica</button>
+              <button onclick="salvarReplica(${t.id})" style="margin-top:4px;background:#d97706;color:#fff;border:none;border-radius:4px;padding:3px 10px;font-size:10px;cursor:pointer">Enviar Réplica</button>
             </div>
           </div>`:'—'}
       </td>
