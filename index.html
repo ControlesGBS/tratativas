@@ -402,7 +402,7 @@ async function salvarConfig(){
 
 // ── TEMPLATE DE EMAIL ─────────────────────────────────────────────
 function montarEmailReplica({supNome, base, tipo, detalhe, replicaTxt}){
-  const TIPO_LABEL={'impedimentos':'Impedimentos GBS','erros':'Erros de leitura','meta':'Meta de leituras','inicio_tardio':'Início tardio','manual':'Manual','transmissoes':'Transmissões pendentes','releituras':'Releituras pendentes'};
+  const TIPO_LABEL={'impedimentos':'Impedimentos GBS','erros':'Erros de leitura','meta':'Meta de leituras','inicio_tardio':'Início tardio','manual':'Manual','transmissoes':'Transmissões pendentes','releituras':'Releituras pendentes','velocidade':'Excesso de Velocidade'};
   const tipoLabel=TIPO_LABEL[tipo]||tipo;
   return {
     assunto:'Gestão de Controles - Réplica à sua resposta',
@@ -432,7 +432,7 @@ function montarEmailReplica({supNome, base, tipo, detalhe, replicaTxt}){
 }
 
 function montarEmail({supNome, base, tipo, ocorrencia, prazoStr, link}){
-  const TIPO_LABEL={'impedimentos':'Impedimentos GBS','erros':'Erros de leitura','meta':'Meta de leituras','inicio_tardio':'Início tardio','manual':'Manual','transmissoes':'Transmissões pendentes','releituras':'Releituras pendentes'};
+  const TIPO_LABEL={'impedimentos':'Impedimentos GBS','erros':'Erros de leitura','meta':'Meta de leituras','inicio_tardio':'Início tardio','manual':'Manual','transmissoes':'Transmissões pendentes','releituras':'Releituras pendentes','velocidade':'Excesso de Velocidade'};
   const tipoLabel=TIPO_LABEL[tipo]||tipo;
   return {
     assunto:'Gestão de Controles - Ação atribuída a você',
