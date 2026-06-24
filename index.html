@@ -281,6 +281,19 @@ async function salvarReplica(id){
   const txt=document.getElementById(`txt-replica-${id}`).value.trim();
   if(!txt){alert('Escreva a réplica antes de salvar.');return;}
   await sb.from('tratativas').update({replica:txt,replica_em:new Date().toISOString()}).eq('id',id);
+
+  try{
+    const {data:trat}=await sb.from('tratativas').select('supervisor_nome,supervisor_email,base,tipo,detalhe').eq('id',id).single();
+    if(trat?.supervisor_email){
+      const {assunto,corpo}=montarEmailReplica({supNome:trat.supervisor_nome,base:trat.base,tipo:trat.tipo,detalhe:trat.detalhe,replicaTxt:txt});
+      await fetch(`${SUPABASE_URL}/functions/v1/enviar-email`,{
+        method:'POST',
+        headers:{'Content-Type':'application/json','Authorization':`Bearer ${SUPABASE_KEY}`},
+        body:JSON.stringify({para:trat.supervisor_email,assunto,corpo})
+      });
+    }
+  }catch(e){ console.error('Erro ao enviar email de réplica:',e); }
+
   await carregarPainel();
 }
 
@@ -382,6 +395,36 @@ async function salvarConfig(){
 }
 
 // ── TEMPLATE DE EMAIL ─────────────────────────────────────────────
+function montarEmailReplica({supNome, base, tipo, detalhe, replicaTxt}){
+  const TIPO_LABEL={'impedimentos':'Impedimentos GBS','erros':'Erros de leitura','meta':'Meta de leituras','inicio_tardio':'Início tardio','manual':'Manual','transmissoes':'Transmissões pendentes','releituras':'Releituras pendentes'};
+  const tipoLabel=TIPO_LABEL[tipo]||tipo;
+  return {
+    assunto:'Gestão de Controles - Réplica à sua resposta',
+    corpo:`
+<div style="font-family:system-ui,sans-serif;max-width:500px;margin:0 auto;color:#1a2a1a">
+  <div style="background:#1a4a1a;padding:14px 20px;border-radius:8px 8px 0 0">
+    <span style="color:#c8e8c8;font-weight:500;font-size:15px">GBS Serviços — Gestão de Controles</span>
+  </div>
+  <div style="background:#fff;border:0.5px solid #c0dcc0;padding:20px;border-radius:0 0 8px 8px">
+    <p style="margin-bottom:14px">Olá, <strong>${supNome}</strong>!</p>
+    <p style="margin-bottom:14px">O gestor não concordou com sua resposta na tratativa abaixo e deixou uma réplica.</p>
+    <table style="width:100%;border-collapse:collapse;margin-bottom:16px;font-size:13px">
+      ${base?`<tr><td style="padding:6px 10px;border:0.5px solid #c0dcc0;background:#f8fbf8;font-weight:500;width:35%">Base</td><td style="padding:6px 10px;border:0.5px solid #c0dcc0">${base}</td></tr>`:''}
+      <tr><td style="padding:6px 10px;border:0.5px solid #c0dcc0;background:#f8fbf8;font-weight:500">Tipo</td><td style="padding:6px 10px;border:0.5px solid #c0dcc0">${tipoLabel}</td></tr>
+      <tr><td style="padding:6px 10px;border:0.5px solid #c0dcc0;background:#f8fbf8;font-weight:500">Ocorrência</td><td style="padding:6px 10px;border:0.5px solid #c0dcc0">${detalhe||'—'}</td></tr>
+    </table>
+    <div style="background:#fdf3e8;border-left:3px solid #d97706;padding:10px 14px;border-radius:4px;margin-bottom:16px">
+      <span style="font-size:11px;color:#854f0b;text-transform:uppercase;letter-spacing:.2px">Réplica do gestor</span><br>
+      <span style="font-size:13px">${replicaTxt}</span>
+    </div>
+    <p style="font-size:11px;color:#4a7a4a;border-top:0.5px solid #c0dcc0;padding-top:12px">
+      At.te<br><strong>Gestão de Controles</strong>
+    </p>
+  </div>
+</div>`
+  };
+}
+
 function montarEmail({supNome, base, tipo, ocorrencia, prazoStr, link}){
   const TIPO_LABEL={'impedimentos':'Impedimentos GBS','erros':'Erros de leitura','meta':'Meta de leituras','inicio_tardio':'Início tardio','manual':'Manual','transmissoes':'Transmissões pendentes','releituras':'Releituras pendentes'};
   const tipoLabel=TIPO_LABEL[tipo]||tipo;
