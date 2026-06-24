@@ -35,6 +35,7 @@ tbody td{padding:10px 12px;color:#1a2a1a;vertical-align:middle}
 .b-re{background:#eaf3de;color:#27500a}
 .b-at{background:#fcebeb;color:#791f1f}
 .b-ga{background:#eeedfe;color:#3c3489}
+.b-aco{background:#e6f1fb;color:#0c447c}
 .btn-resp{background:#2d7a2d;color:#fff;border:none;border-radius:4px;padding:3px 10px;font-size:10px;cursor:pointer}
 .btn-ver{background:none;border:0.5px solid #a0c8a0;color:#1a4a1a;border-radius:4px;padding:3px 10px;font-size:10px;cursor:pointer}
 .resp-box{display:none;margin-top:6px;background:#f0f8f0;border-left:3px solid #2d7a2d;padding:6px 8px;border-radius:4px;font-size:11px;line-height:1.6}
@@ -80,9 +81,9 @@ tbody td{padding:10px 12px;color:#1a2a1a;vertical-align:middle}
     </div>
     <table>
       <thead><tr>
-        <th>Tipo</th><th>Detalhe</th><th>Mês</th><th>Prazo</th><th>Status</th><th>Ação</th>
+        <th>Tipo</th><th>Base</th><th>Detalhe</th><th>Mês</th><th>Prazo</th><th>Status</th><th>Ação</th>
       </tr></thead>
-      <tbody id="tbody"><tr><td colspan="6" class="status-msg">Carregando...</td></tr></tbody>
+      <tbody id="tbody"><tr><td colspan="7" class="status-msg">Carregando...</td></tr></tbody>
     </table>
   </div>
 </div>
@@ -91,8 +92,13 @@ tbody td{padding:10px 12px;color:#1a2a1a;vertical-align:middle}
 const SUPABASE_URL='https://ndwivbhqglpnfyqwjbzu.supabase.co';
 const SUPABASE_KEY='sb_publishable_IhuNziyT5VYrMKRixcPGjA_LAn5ku-7';
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-const TIPO={'impedimentos':'Impedimentos','erros':'Erros leitura','meta':'Meta leituras','inicio_tardio':'Início tardio','manual':'Manual'};
+const TIPO={'impedimentos':'Impedimentos','erros':'Erros leitura','meta':'Meta leituras','inicio_tardio':'Início tardio','manual':'Manual','transmissoes':'Transmissões pendentes','releituras':'Releituras pendentes','velocidade':'Excesso de Velocidade'};
+const TST_BASES={
+  'tst_passos':['Guaxupé','Passos','SSP'],
+  'tst_pouso_alegre':['Pouso Alegre','Alfenas','Ouro Fino','Andradas']
+};
 let LISTA=[];
+let SOU_TST=false;
 
 async function sair(){await sb.auth.signOut();location.href='/controles/teste/index.html';}
 
@@ -103,9 +109,16 @@ async function sair(){await sb.auth.signOut();location.href='/controles/teste/in
   if(!up||!up.ativo){location.href='/controles/teste/index.html';return;}
   document.getElementById('hdr-user').textContent=up.nome||user.email;
 
+  SOU_TST=['tst_passos','tst_pouso_alegre'].includes(up.perfil);
+
   let q=sb.from('tratativas').select('*').order('created_at',{ascending:false});
-  if(up.base) q=q.filter('base','ilike',up.base);
-  else q=q.eq('supervisor_id',user.id);
+  if(SOU_TST){
+    q=q.eq('tipo','velocidade').in('base',TST_BASES[up.perfil]||[]);
+  } else if(up.base){
+    q=q.filter('base','ilike',up.base);
+  } else {
+    q=q.eq('supervisor_id',user.id);
+  }
   const {data:trats}=await q;
   LISTA=trats||[];
 
@@ -136,9 +149,25 @@ function renderTabela(){
   const BC={respondida:'b-re',atrasada:'b-at',aberta:'b-ab'};
   const BT={respondida:'Respondida',atrasada:'Atrasada',aberta:'Aberta'};
 
-  document.getElementById('tbody').innerHTML=lista.length?lista.map(t=>`
+  document.getElementById('tbody').innerHTML=lista.length?lista.map(t=>{
+    const somenteAcompanhar=t.tipo==='velocidade'&&!SOU_TST;
+    let acaoHtml;
+    if(somenteAcompanhar){
+      acaoHtml=`<span class="badge b-aco">Tratado pelo TST</span>`;
+    } else if(!t.respondida){
+      acaoHtml=`<button class="btn-resp" onclick="window.open('/controles/tratativas/responder.html?id=${t.id}','_blank')">Responder</button>`;
+    } else {
+      acaoHtml=`<button class="btn-ver" onclick="toggleResp(this)">Ver resposta</button>
+            <div class="resp-box">
+              <span class="resp-label">Causa</span>${t.causa||'—'}
+              <span class="resp-label">Ação tomada</span>${t.acao_tomada||'—'}
+              <span style="font-size:10px;color:#4a7a4a;margin-top:4px;display:block">Respondido em ${new Date(t.respondida_em).toLocaleString('pt-BR')}</span>
+            </div>`;
+    }
+    return `
     <tr>
       <td><span class="badge b-ga">${TIPO[t.tipo]||t.tipo}</span></td>
+      <td style="font-size:14px">${t.base||'—'}</td>
       <td style="max-width:280px">${t.detalhe||'—'}</td>
       <td>${t.mes_ref||'—'}</td>
       <td>${t.prazo_resposta?new Date(t.prazo_resposta+'T12:00:00').toLocaleDateString('pt-BR'):'—'}</td>
@@ -146,19 +175,10 @@ function renderTabela(){
         <span class="badge ${BC[t.sc]}">${BT[t.sc]}</span>
         ${t.respondida&&t.respondida_em?` <span style="font-size:10px;color:#4a7a4a">${new Date(t.respondida_em).toLocaleDateString('pt-BR')}</span>`:''}
       </td>
-      <td>
-        ${!t.respondida
-          ?`<button class="btn-resp" onclick="window.open('/controles/tratativas/responder.html?id=${t.id}','_blank')">Responder</button>`
-          :`<button class="btn-ver" onclick="toggleResp(this)">Ver resposta</button>
-            <div class="resp-box">
-              <span class="resp-label">Causa</span>${t.causa||'—'}
-              <span class="resp-label">Ação tomada</span>${t.acao_tomada||'—'}
-              <span style="font-size:10px;color:#4a7a4a;margin-top:4px;display:block">Respondido em ${new Date(t.respondida_em).toLocaleString('pt-BR')}</span>
-            </div>`
-        }
-      </td>
-    </tr>`).join('')
-    :'<tr><td colspan="6" class="status-msg">Nenhuma tratativa encontrada.</td></tr>';
+      <td>${acaoHtml}</td>
+    </tr>`;
+  }).join('')
+    :'<tr><td colspan="7" class="status-msg">Nenhuma tratativa encontrada.</td></tr>';
 }
 
 function toggleResp(btn){
