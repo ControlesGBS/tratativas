@@ -63,6 +63,8 @@ const TIPO_LABEL={'impedimentos':'Impedimentos GBS','erros':'Erros de leitura','
     <div class="ctx-box">
       ${t.matricula?`<strong>Leiturista:</strong> ${t.matricula}${t.nome_leiturista?' — '+t.nome_leiturista:''}<br>`:''}
       <strong>Ocorrência:</strong> ${t.detalhe||'—'}<br>
+      ${t.instalacoes?`<strong>Instalação:</strong> ${t.instalacoes}<br>`:''}
+      ${t.uls?`<strong>UL:</strong> ${t.uls}<br>`:''}
       ${t.mes_ref?`<strong>Mês de referência:</strong> ${t.mes_ref}<br>`:''}
       <strong>Prazo para resposta:</strong> ${prazoStr}
     </div>
