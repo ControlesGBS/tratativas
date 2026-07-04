@@ -76,7 +76,15 @@ function renderHistorico(hist){
   const {data:t}=await sb.from('tratativas').select('*').eq('id',id).single();
   if(!t){document.getElementById('conteudo').innerHTML='<p style="color:#a32d2d;text-align:center">Tratativa não encontrada.</p>';return;}
   TRAT=t;
-  const historicoHtml=renderHistorico(t.historico||[]);
+  // Compatibilidade: tratativas respondidas antes do histórico existir têm causa/acao_tomada
+  // salvos, mas não têm a entrada correspondente no array historico. Sintetiza aqui pra exibir.
+  let historico=t.historico||[];
+  const jaTemRespostaInicial=historico.some(h=>h.tipo==='resposta');
+  if(!jaTemRespostaInicial && (t.causa||t.acao_tomada)){
+    historico=[{tipo:'resposta',causa:t.causa,acao:t.acao_tomada,autor:t.supervisor_nome,data:t.respondida_em},...historico];
+  }
+  TRAT.historico=historico; // garante que futuras gravações incluam essa reconstrução
+  const historicoHtml=renderHistorico(historico);
   if(t.respondida){
     document.getElementById('conteudo').innerHTML=`
       <div class="titulo">Tratativa já respondida</div>
