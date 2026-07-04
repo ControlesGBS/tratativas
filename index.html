@@ -104,7 +104,7 @@ tbody td{padding:6px 10px;color:#1a2a1a;vertical-align:middle}
     <div style="overflow-x:auto">
       <table>
         <thead><tr>
-          <th>Supervisor</th><th>Base</th><th>Leiturista</th><th>Tipo</th><th>Detalhe</th><th>Mês</th><th>Prazo</th><th>Status</th><th>Resposta</th><th></th>
+          <th>Supervisor</th><th>Base</th><th>Leiturista</th><th>Tipo</th><th>Detalhe</th><th>Disparo</th><th>Prazo</th><th>Status</th><th>Resposta</th><th></th>
         </tr></thead>
         <tbody id="tbody-painel"><tr><td colspan="9" class="status-msg">Carregando...</td></tr></tbody>
       </table>
@@ -163,6 +163,16 @@ function irPag(id,btn){
 }
 async function sair(){await sb.auth.signOut();location.href='../teste/index.html';}
 
+function normalizarMes(raw){
+  if(!raw) return null;
+  // aceita 'yyyy-mm-01', 'yyyy-mm' ou 'mm/yyyy' e sempre devolve 'MM/AAAA'
+  if(/^\d{4}-\d{2}/.test(raw)){
+    const [aa,mm]=raw.slice(0,7).split('-');
+    return `${mm}/${aa}`;
+  }
+  return raw;
+}
+
 // ── INIT ─────────────────────────────────────────────────────────
 let GESTOR_NOME=null;
 (async()=>{
@@ -179,20 +189,11 @@ let GESTOR_NOME=null;
   // Popular filtros
   const selMes=document.getElementById('p-mes');
   const {data:mesesData}=await sb.from('tratativas').select('mes_ref');
-  const mesesUniq=[...new Set((mesesData||[]).map(r=>r.mes_ref).filter(Boolean))];
-
-  function labelMes(raw){
-    // aceita 'yyyy-mm-01', 'yyyy-mm' ou 'mm/yyyy' e converte pra exibição MM/AAAA
-    if(/^\d{4}-\d{2}/.test(raw)){
-      const [aa,mm]=raw.slice(0,7).split('-');
-      return `${mm}/${aa}`;
-    }
-    return raw; // já está em mm/aaaa ou outro formato — exibe como está
-  }
+  const mesesUniq=[...new Set((mesesData||[]).map(r=>normalizarMes(r.mes_ref)).filter(Boolean))];
 
   mesesUniq
-    .sort((a,b)=>labelMes(b).split('/').reverse().join('')-labelMes(a).split('/').reverse().join(''))
-    .forEach(raw=>{ selMes.innerHTML+=`<option value="${raw}">${labelMes(raw)}</option>`; });
+    .sort((a,b)=>b.split('/').reverse().join('')-a.split('/').reverse().join(''))
+    .forEach(mesNorm=>{ selMes.innerHTML+=`<option value="${mesNorm}">${mesNorm}</option>`; });
 
   const {data:bases}=await sb.from('local_base').select('base').order('base');
   const basesUniq=[...new Set((bases||[]).map(r=>r.base).filter(Boolean))];
@@ -208,10 +209,10 @@ async function carregarPainel(){
   const status=document.getElementById('p-status').value;
   const base=document.getElementById('p-base').value;
   let q=sb.from('tratativas').select('*').order('created_at',{ascending:false});
-  if(mes) q=q.eq('mes_ref',mes);
   if(base) q=q.eq('base',base);
   const {data:trats}=await q;
   let lista=trats||[];
+  if(mes) lista=lista.filter(t=>normalizarMes(t.mes_ref)===mes);
   const hoje=new Date(); hoje.setHours(0,0,0,0);
   // Calcular status
   lista=lista.map(t=>({...t,
@@ -234,7 +235,7 @@ async function carregarPainel(){
       <td>${t.nome_leiturista||t.matricula||'—'}</td>
       <td><span class="badge b-ga">${TIPO[t.tipo]||t.tipo}</span></td>
       <td style="max-width:180px;font-size:11px">${t.detalhe||'—'}</td>
-      <td>${t.mes_ref||'—'}</td>
+      <td>${t.created_at?new Date(t.created_at).toLocaleDateString('pt-BR'):'—'}</td>
       <td>${t.prazo_resposta?new Date(t.prazo_resposta+'T12:00:00').toLocaleDateString('pt-BR'):'—'}</td>
       <td><span class="badge ${BADGEC[t.status_calc]}">${BADGET[t.status_calc]}</span>${t.respondida&&t.respondida_em?` <span style="font-size:10px;color:#4a7a4a">${new Date(t.respondida_em).toLocaleDateString('pt-BR')}</span>`:''}</td>
       <td style="min-width:120px">
