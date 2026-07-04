@@ -225,7 +225,7 @@ async function carregarPainel(){
   document.getElementById('kpi-at').textContent=lista.filter(t=>t.status_calc==='atrasada').length;
   document.getElementById('kpi-tot').textContent=lista.length;
   document.getElementById('p-count').textContent=`${lista.length} tratativa(s)`;
-  const TIPO={'impedimentos':'Impedimentos','erros':'Erros leitura','meta':'Meta leituras','inicio_tardio':'Início tardio','termino_tardio':'Término tardio','manual':'Manual'};
+  const TIPO={'impedimentos':'Impedimentos','erros':'Erros leitura','meta':'Meta leituras','inicio_tardio':'Início tardio','termino_tardio':'Término tardio','alerta_horario':'Verificar alerta de horário','manual':'Manual'};
   const BADGEC={'respondida':'b-re','atrasada':'b-at','aberta':'b-ab'};
   const BADGET={'respondida':'Respondida','atrasada':'Atrasada','aberta':'Aberta'};
   document.getElementById('tbody-painel').innerHTML=lista.length?lista.map((t,i)=>`
@@ -439,7 +439,7 @@ async function salvarConfig(){
 
 // ── TEMPLATE DE EMAIL ─────────────────────────────────────────────
 function montarEmailReplica({supNome, base, tipo, detalhe, replicaTxt, replicaPor, exigeResposta, link}){
-  const TIPO_LABEL={'impedimentos':'Impedimentos GBS','erros':'Erros de leitura','meta':'Meta de leituras','inicio_tardio':'Início tardio','termino_tardio':'Término tardio','manual':'Manual','transmissoes':'Transmissões pendentes','releituras':'Releituras pendentes','velocidade':'Excesso de Velocidade'};
+  const TIPO_LABEL={'impedimentos':'Impedimentos GBS','erros':'Erros de leitura','meta':'Meta de leituras','inicio_tardio':'Início tardio','termino_tardio':'Término tardio','alerta_horario':'Verificar alerta de horário','manual':'Manual','transmissoes':'Transmissões pendentes','releituras':'Releituras pendentes','velocidade':'Excesso de Velocidade'};
   const tipoLabel=TIPO_LABEL[tipo]||tipo;
   return {
     assunto:'Gestão de Controles - Réplica à sua resposta',
@@ -475,7 +475,7 @@ function montarEmailReplica({supNome, base, tipo, detalhe, replicaTxt, replicaPo
 }
 
 function montarEmail({supNome, base, tipo, ocorrencia, prazoStr, link, enviadoPor}){
-  const TIPO_LABEL={'impedimentos':'Impedimentos GBS','erros':'Erros de leitura','meta':'Meta de leituras','inicio_tardio':'Início tardio','termino_tardio':'Término tardio','manual':'Manual','transmissoes':'Transmissões pendentes','releituras':'Releituras pendentes','velocidade':'Excesso de Velocidade'};
+  const TIPO_LABEL={'impedimentos':'Impedimentos GBS','erros':'Erros de leitura','meta':'Meta de leituras','inicio_tardio':'Início tardio','termino_tardio':'Término tardio','alerta_horario':'Verificar alerta de horário','manual':'Manual','transmissoes':'Transmissões pendentes','releituras':'Releituras pendentes','velocidade':'Excesso de Velocidade'};
   const tipoLabel=TIPO_LABEL[tipo]||tipo;
   return {
     assunto:'Gestão de Controles - Ação atribuída a você',
