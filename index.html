@@ -718,11 +718,14 @@ async function dispararReleitura(base, qtdUls, supNome, supEmail, inputId){
 
 // ── MANUAL ────────────────────────────────────────────────────────
 async function carregarSupervisores(){
-  const {data}=await sb.from('usuarios_portal').select('id,nome,email,base')
-    .in('perfil',['supervisor']).eq('ativo',true).order('nome');
+  const {data}=await sb.from('usuarios_portal').select('id,nome,email,base,perfil')
+    .in('perfil',['supervisor','tst_passos','tst_pouso_alegre']).eq('ativo',true).order('nome');
   const sel=document.getElementById('m-sup');
   sel.innerHTML='<option value="">Selecione...</option>';
-  (data||[]).forEach(s=>sel.innerHTML+=`<option value="${s.id}" data-email="${s.email}" data-nome="${s.nome}" data-base="${s.base||''}">${s.nome} — ${s.base||'Todas'}</option>`);
+  (data||[]).forEach(s=>{
+    const rotulo=s.perfil==='supervisor'?(s.base||'Todas'):'TST';
+    sel.innerHTML+=`<option value="${s.id}" data-email="${s.email}" data-nome="${s.nome}" data-base="${s.base||''}">${s.nome} — ${rotulo}</option>`;
+  });
 }
 
 async function enviarManual(){
