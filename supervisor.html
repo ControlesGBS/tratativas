@@ -97,6 +97,7 @@ const TST_BASES={
   'tst_passos':['Guaxupé','Passos','SSP'],
   'tst_pouso_alegre':['Pouso Alegre','Alfenas','Ouro Fino','Andradas']
 };
+const NOME_REAL_BASE={'SSP':'São Sebastião Do Paraiso'}; // TST_BASES usa a sigla, mas a base gravada na tratativa é o nome completo
 let LISTA=[];
 let SOU_TST=false;
 
@@ -113,7 +114,8 @@ async function sair(){await sb.auth.signOut();location.href='https://gbsservicos
 
   let q=sb.from('tratativas').select('*').order('created_at',{ascending:false});
   if(SOU_TST){
-    q=q.eq('tipo','velocidade').in('base',TST_BASES[up.perfil]||[]);
+    const bases=(TST_BASES[up.perfil]||[]).map(b=>NOME_REAL_BASE[b]||b);
+    q=q.or(`and(tipo.eq.velocidade,base.in.(${bases.join(',')})),supervisor_id.eq.${user.id}`);
   } else if(up.base){
     q=q.filter('base','ilike',up.base);
   } else {

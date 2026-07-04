@@ -54,6 +54,11 @@ function renderHistorico(hist){
         <em>Causa:</em> ${h.causa||'—'}<br><em>Ação tomada:</em> ${h.acao||'—'}
       </div>`;
     }
+    if(h.tipo==='resposta_manual'){
+      return `<div class="ctx-box" style="background:#f0f8f0">
+        <strong>Resposta do supervisor${h.autor?' — '+h.autor:''}</strong> <span style="opacity:.7">(${dataStr})</span><br>${h.texto}
+      </div>`;
+    }
     if(h.tipo==='replica'){
       return `<div class="ctx-box" style="background:#fdf3e8;border-color:#e8c48a">
         <strong style="color:#854f0b">Réplica do gestor${h.autor?' — '+h.autor:''}</strong> <span style="opacity:.7">(${dataStr})</span><br>${h.texto}
@@ -79,7 +84,7 @@ function renderHistorico(hist){
   // Compatibilidade: tratativas respondidas antes do histórico existir têm causa/acao_tomada
   // salvos, mas não têm a entrada correspondente no array historico. Sintetiza aqui pra exibir.
   let historico=t.historico||[];
-  const jaTemRespostaInicial=historico.some(h=>h.tipo==='resposta');
+  const jaTemRespostaInicial=historico.some(h=>h.tipo==='resposta'||h.tipo==='resposta_manual');
   if(!jaTemRespostaInicial && (t.causa||t.acao_tomada)){
     historico=[{tipo:'resposta',causa:t.causa,acao:t.acao_tomada,autor:t.supervisor_nome,data:t.respondida_em},...historico];
   }
@@ -113,6 +118,12 @@ function renderHistorico(hist){
       <textarea id="inp-resposta" placeholder="Responda à réplica do gestor..."></textarea>
     </div>
     <button class="btn-verde" id="btn-enviar" onclick="enviarRespostaReplica(${t.id})">Enviar resposta</button>
+    `:t.tipo==='manual'?`
+    <div class="form-group">
+      <label>Resposta</label>
+      <textarea id="inp-resposta-manual" placeholder="Escreva sua resposta..."></textarea>
+    </div>
+    <button class="btn-verde" id="btn-enviar" onclick="enviarRespostaManual(${t.id})">Enviar resposta</button>
     `:`
     <div class="form-group">
       <label>Causa</label>
@@ -138,6 +149,24 @@ async function enviarRespostaReplica(id){
   const {error}=await sb.from('tratativas').update({
     respondida:true, respondida_em:new Date().toISOString(),
     resposta_replica:resposta, replica_exige_resposta:false, historico:hist,
+  }).eq('id',id);
+  if(error){msg.className='msg erro';msg.textContent='Erro ao salvar. Tente novamente.';btn.disabled=false;return;}
+  document.getElementById('conteudo').innerHTML=`
+    <div class="titulo" style="text-align:center;margin-bottom:12px">✓ Resposta enviada!</div>
+    <div class="ja-respondido">Sua tratativa foi registrada com sucesso.<br>Obrigado!</div>`;
+}
+
+async function enviarRespostaManual(id){
+  const resposta=document.getElementById('inp-resposta-manual').value.trim();
+  const msg=document.getElementById('msg-resp');
+  const btn=document.getElementById('btn-enviar');
+  if(!resposta){msg.className='msg erro';msg.textContent='Escreva sua resposta.';return;}
+  btn.disabled=true;msg.className='msg';msg.textContent='Enviando...';
+  const hist=(TRAT?.historico)||[];
+  hist.push({tipo:'resposta_manual',texto:resposta,autor:TRAT?.supervisor_nome||'Supervisor',data:new Date().toISOString()});
+  const {error}=await sb.from('tratativas').update({
+    respondida:true, respondida_em:new Date().toISOString(),
+    acao_tomada:resposta, replica_exige_resposta:false, historico:hist,
   }).eq('id',id);
   if(error){msg.className='msg erro';msg.textContent='Erro ao salvar. Tente novamente.';btn.disabled=false;return;}
   document.getElementById('conteudo').innerHTML=`
