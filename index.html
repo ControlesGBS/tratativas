@@ -486,7 +486,7 @@ function montarEmailReplica({supNome, base, tipo, detalhe, replicaTxt, replicaPo
   };
 }
 
-function montarEmail({supNome, base, tipo, ocorrencia, prazoStr, link}){
+function montarEmail({supNome, base, tipo, ocorrencia, prazoStr, link, enviadoPor}){
   const TIPO_LABEL={'impedimentos':'Impedimentos GBS','erros':'Erros de leitura','meta':'Meta de leituras','inicio_tardio':'Início tardio','termino_tardio':'Término tardio','manual':'Manual','transmissoes':'Transmissões pendentes','releituras':'Releituras pendentes','velocidade':'Excesso de Velocidade'};
   const tipoLabel=TIPO_LABEL[tipo]||tipo;
   return {
@@ -509,7 +509,7 @@ function montarEmail({supNome, base, tipo, ocorrencia, prazoStr, link}){
       <a href="${link}" style="background:#2d7a2d;color:#fff;padding:10px 28px;border-radius:6px;text-decoration:none;font-weight:500;font-size:13px">REGISTRAR TRATATIVA</a>
     </div>
     <p style="font-size:11px;color:#4a7a4a;border-top:0.5px solid #c0dcc0;padding-top:12px">
-      At.te<br><strong>Gestão de Controles</strong>
+      At.te<br><strong>Gestão de Controles</strong>${enviadoPor?`<br><span style="color:#90a090">Enviado por: ${enviadoPor}</span>`:''}
     </p>
   </div>
 </div>`
@@ -613,7 +613,7 @@ async function dispararTransmissao(base, qtdUls, supNome, supEmail, inputId){
     detalhe:ocorrencia, prazo_resposta:prazoInp,
   }).select().single();
   const link=`${location.origin}/controles/tratativas/responder.html?id=${trat?.id}`;
-  const {assunto,corpo}=montarEmail({supNome,base,tipo:'transmissoes',ocorrencia,prazoStr,link});
+  const {assunto,corpo}=montarEmail({supNome,base,tipo:'transmissoes',ocorrencia,prazoStr,link,enviadoPor:GESTOR_NOME});
   await fetch(`${SUPABASE_URL}/functions/v1/enviar-email`,{
     method:'POST',
     headers:{'Content-Type':'application/json','Authorization':`Bearer ${SUPABASE_KEY}`},
@@ -707,7 +707,7 @@ async function dispararReleitura(base, qtdUls, supNome, supEmail, inputId){
     detalhe:ocorrencia, prazo_resposta:prazoInp,
   }).select().single();
   const link=`${location.origin}/controles/tratativas/responder.html?id=${trat?.id}`;
-  const {assunto,corpo}=montarEmail({supNome,base,tipo:'releituras',ocorrencia,prazoStr,link});
+  const {assunto,corpo}=montarEmail({supNome,base,tipo:'releituras',ocorrencia,prazoStr,link,enviadoPor:GESTOR_NOME});
   await fetch(`${SUPABASE_URL}/functions/v1/enviar-email`,{
     method:'POST',
     headers:{'Content-Type':'application/json','Authorization':`Bearer ${SUPABASE_KEY}`},
@@ -747,7 +747,7 @@ async function enviarManual(){
     prazo_resposta:prazoInp,
   }).select().single();
   const link=`${location.origin}/controles/tratativas/responder.html?id=${trat?.id}`;
-  const {assunto,corpo}=montarEmail({supNome,base:supBase||'—',tipo:'manual',ocorrencia:msg,prazoStr,link});
+  const {assunto,corpo}=montarEmail({supNome,base:supBase||'—',tipo:'manual',ocorrencia:msg,prazoStr,link,enviadoPor:GESTOR_NOME});
   await fetch(`${SUPABASE_URL}/functions/v1/enviar-email`,{
     method:'POST',
     headers:{'Content-Type':'application/json','Authorization':`Bearer ${SUPABASE_KEY}`},
