@@ -164,6 +164,7 @@ function irPag(id,btn){
 async function sair(){await sb.auth.signOut();location.href='../teste/index.html';}
 
 // ── INIT ─────────────────────────────────────────────────────────
+let GESTOR_NOME=null;
 (async()=>{
   const {data:{user}}=await sb.auth.getUser();
   if(!user){location.href='../login.html';return;}
@@ -171,7 +172,8 @@ async function sair(){await sb.auth.signOut();location.href='../teste/index.html
   if(!up||!up.ativo||!['gestor','gestor1','supervisor_geral'].includes(up.perfil)){
     location.href='../teste/index.html';return;
   }
-  document.getElementById('hdr-user').textContent=up.nome||user.email;
+  GESTOR_NOME=up.nome||user.email;
+  document.getElementById('hdr-user').textContent=GESTOR_NOME;
   // Registrar acesso
   await sb.from('usuarios_ultimo_acesso').upsert({user_id:user.id,ultimo_acesso:new Date().toISOString()});
   // Popular filtros
@@ -238,7 +240,7 @@ async function carregarPainel(){
 
             ${t.replica?`
               <div style="margin-top:8px;background:#fdf3e8;border-left:3px solid #d97706;padding:6px 8px;border-radius:4px">
-                <span style="font-size:9px;color:#854f0b;text-transform:uppercase;letter-spacing:.2px">Réplica do gestor</span><br>
+                <span style="font-size:9px;color:#854f0b;text-transform:uppercase;letter-spacing:.2px">Réplica do gestor${t.replica_por?' - '+t.replica_por:''}</span><br>
                 <span>${t.replica}</span><br>
                 <span style="font-size:10px;color:#854f0b">${t.replica_em?new Date(t.replica_em).toLocaleString('pt-BR'):''}</span>
               </div>`:''}
@@ -246,6 +248,9 @@ async function carregarPainel(){
             <button onclick="abrirFormReplica(${t.id})" style="margin-top:6px;background:none;border:0.5px solid #d97706;color:#854f0b;border-radius:4px;padding:3px 8px;font-size:10px;cursor:pointer">${t.replica?'Editar réplica':'Replicar'}</button>
             <div id="form-replica-${t.id}" style="display:none;margin-top:6px">
               <textarea id="txt-replica-${t.id}" rows="2" placeholder="Explique por que você não concorda com a resposta..." style="width:100%;border:0.5px solid #d97706;border-radius:4px;padding:6px;font-size:11px;font-family:inherit;resize:vertical">${t.replica||''}</textarea>
+              <label style="display:flex;align-items:center;gap:4px;margin-top:4px;font-size:10px;color:#854f0b;cursor:pointer">
+                <input type="checkbox" id="chk-exige-${t.id}" ${t.replica_exige_resposta?'checked':''}> Pedir nova resposta do supervisor (reabre a tratativa)
+              </label>
               <button onclick="salvarReplica(${t.id})" style="margin-top:4px;background:#d97706;color:#fff;border:none;border-radius:4px;padding:3px 10px;font-size:10px;cursor:pointer">Enviar Réplica</button>
             </div>
           </div>`:'—'}
@@ -280,12 +285,23 @@ function abrirFormReplica(id){
 async function salvarReplica(id){
   const txt=document.getElementById(`txt-replica-${id}`).value.trim();
   if(!txt){alert('Escreva a réplica antes de salvar.');return;}
-  await sb.from('tratativas').update({replica:txt,replica_em:new Date().toISOString()}).eq('id',id);
+  const exigeResposta=document.getElementById(`chk-exige-${id}`)?.checked||false;
+
+  const update={replica:txt,replica_em:new Date().toISOString(),replica_por:GESTOR_NOME,replica_exige_resposta:exigeResposta};
+  if(exigeResposta){
+    update.respondida=false; update.respondida_em=null;
+    // Renovar prazo, já que o prazo antigo pode já ter passado
+    const {data:cfgPrazo}=await sb.from('tratativas_config').select('prazo_dias').single();
+    const novoPrazo=new Date(); novoPrazo.setDate(novoPrazo.getDate()+(cfgPrazo?.prazo_dias||5));
+    update.prazo_resposta=novoPrazo.toISOString().split('T')[0];
+  }
+  await sb.from('tratativas').update(update).eq('id',id);
 
   try{
     const {data:trat}=await sb.from('tratativas').select('supervisor_nome,supervisor_email,base,tipo,detalhe').eq('id',id).single();
     if(trat?.supervisor_email){
-      const {assunto,corpo}=montarEmailReplica({supNome:trat.supervisor_nome,base:trat.base,tipo:trat.tipo,detalhe:trat.detalhe,replicaTxt:txt});
+      const link=`${location.origin}/controles/tratativas/responder.html?id=${id}`;
+      const {assunto,corpo}=montarEmailReplica({supNome:trat.supervisor_nome,base:trat.base,tipo:trat.tipo,detalhe:trat.detalhe,replicaTxt:txt,replicaPor:GESTOR_NOME,exigeResposta,link});
       await fetch(`${SUPABASE_URL}/functions/v1/enviar-email`,{
         method:'POST',
         headers:{'Content-Type':'application/json','Authorization':`Bearer ${SUPABASE_KEY}`},
@@ -401,7 +417,7 @@ async function salvarConfig(){
 }
 
 // ── TEMPLATE DE EMAIL ─────────────────────────────────────────────
-function montarEmailReplica({supNome, base, tipo, detalhe, replicaTxt}){
+function montarEmailReplica({supNome, base, tipo, detalhe, replicaTxt, replicaPor, exigeResposta, link}){
   const TIPO_LABEL={'impedimentos':'Impedimentos GBS','erros':'Erros de leitura','meta':'Meta de leituras','inicio_tardio':'Início tardio','manual':'Manual','transmissoes':'Transmissões pendentes','releituras':'Releituras pendentes','velocidade':'Excesso de Velocidade'};
   const tipoLabel=TIPO_LABEL[tipo]||tipo;
   return {
@@ -420,9 +436,15 @@ function montarEmailReplica({supNome, base, tipo, detalhe, replicaTxt}){
       <tr><td style="padding:6px 10px;border:0.5px solid #c0dcc0;background:#f8fbf8;font-weight:500">Ocorrência</td><td style="padding:6px 10px;border:0.5px solid #c0dcc0">${detalhe||'—'}</td></tr>
     </table>
     <div style="background:#fdf3e8;border-left:3px solid #d97706;padding:10px 14px;border-radius:4px;margin-bottom:16px">
-      <span style="font-size:11px;color:#854f0b;text-transform:uppercase;letter-spacing:.2px">Réplica do gestor</span><br>
+      <span style="font-size:11px;color:#854f0b;text-transform:uppercase;letter-spacing:.2px">Réplica do gestor${replicaPor?' — '+replicaPor:''}</span><br>
       <span style="font-size:13px">${replicaTxt}</span>
     </div>
+    ${exigeResposta?`
+    <p style="margin-bottom:16px">Por favor, registre uma nova resposta clicando no botão abaixo.</p>
+    <div style="text-align:center;margin-bottom:20px"><a href="${link}" style="background:#2d7a2d;color:#fff;padding:10px 28px;border-radius:6px;text-decoration:none;font-weight:500;font-size:13px">RESPONDER NOVAMENTE</a></div>
+    `:`
+    <p style="margin-bottom:16px;font-size:12px;color:#4a7a4a">Este é apenas um comentário informativo — não é necessário responder novamente.</p>
+    `}
     <p style="font-size:11px;color:#4a7a4a;border-top:0.5px solid #c0dcc0;padding-top:12px">
       At.te<br><strong>Gestão de Controles</strong>
     </p>

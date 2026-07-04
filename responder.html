@@ -57,9 +57,10 @@ const TIPO_LABEL={'impedimentos':'Impedimentos GBS','erros':'Erros de leitura','
     return;
   }
   const prazoStr=t.prazo_resposta?new Date(t.prazo_resposta+'T12:00:00').toLocaleDateString('pt-BR'):'—';
+  const tituloMsg=t.replica_exige_resposta?'O gestor pediu uma nova resposta':`Olá, ${t.supervisor_nome||'Supervisor'}! Registre sua resposta abaixo.`;
   document.getElementById('conteudo').innerHTML=`
     <div class="titulo">Tratativa — ${TIPO_LABEL[t.tipo]||t.tipo}</div>
-    <div class="subtitulo">Olá, ${t.supervisor_nome||'Supervisor'}! Registre sua resposta abaixo.</div>
+    <div class="subtitulo">${tituloMsg}</div>
     <div class="ctx-box">
       ${t.matricula?`<strong>Leiturista:</strong> ${t.matricula}${t.nome_leiturista?' — '+t.nome_leiturista:''}<br>`:''}
       <strong>Ocorrência:</strong> ${t.detalhe||'—'}<br>
@@ -68,13 +69,17 @@ const TIPO_LABEL={'impedimentos':'Impedimentos GBS','erros':'Erros de leitura','
       ${t.mes_ref?`<strong>Mês de referência:</strong> ${t.mes_ref}<br>`:''}
       <strong>Prazo para resposta:</strong> ${prazoStr}
     </div>
+    ${t.replica_exige_resposta&&t.replica?`
+    <div class="ctx-box" style="background:#fdf3e8;border-color:#e8c48a">
+      <strong style="color:#854f0b">Réplica do gestor${t.replica_por?' — '+t.replica_por:''}:</strong><br>${t.replica}
+    </div>`:''}
     <div class="form-group">
       <label>Causa</label>
-      <textarea id="inp-causa" placeholder="Descreva a causa do problema..."></textarea>
+      <textarea id="inp-causa" placeholder="Descreva a causa do problema...">${t.replica_exige_resposta?(t.causa||''):''}</textarea>
     </div>
     <div class="form-group">
       <label>Ação tomada</label>
-      <textarea id="inp-acao" placeholder="O que foi feito para resolver..."></textarea>
+      <textarea id="inp-acao" placeholder="O que foi feito para resolver...">${t.replica_exige_resposta?(t.acao_tomada||''):''}</textarea>
     </div>
     <button class="btn-verde" id="btn-enviar" onclick="enviarResposta(${t.id})">Enviar resposta</button>
     <div class="msg" id="msg-resp"></div>`;
@@ -89,7 +94,7 @@ async function enviarResposta(id){
   btn.disabled=true;msg.className='msg';msg.textContent='Enviando...';
   const {error}=await sb.from('tratativas').update({
     respondida:true, respondida_em:new Date().toISOString(),
-    causa, acao_tomada:acao,
+    causa, acao_tomada:acao, replica_exige_resposta:false,
   }).eq('id',id);
   if(error){msg.className='msg erro';msg.textContent='Erro ao salvar. Tente novamente.';btn.disabled=false;return;}
   document.getElementById('conteudo').innerHTML=`
