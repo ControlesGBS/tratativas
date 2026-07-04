@@ -42,6 +42,32 @@ const SUPABASE_KEY='sb_publishable_IhuNziyT5VYrMKRixcPGjA_LAn5ku-7';
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
 const TIPO_LABEL={'impedimentos':'Impedimentos GBS','erros':'Erros de leitura','meta':'Meta de leituras','inicio_tardio':'Início tardio','manual':'Tratativa manual'};
+let TRAT=null;
+
+function renderHistorico(hist){
+  if(!hist||!hist.length) return '';
+  const itens=hist.map(h=>{
+    const dataStr=h.data?new Date(h.data).toLocaleString('pt-BR'):'';
+    if(h.tipo==='resposta'){
+      return `<div class="ctx-box" style="background:#f0f8f0">
+        <strong>Resposta do supervisor${h.autor?' — '+h.autor:''}</strong> <span style="opacity:.7">(${dataStr})</span><br>
+        <em>Causa:</em> ${h.causa||'—'}<br><em>Ação tomada:</em> ${h.acao||'—'}
+      </div>`;
+    }
+    if(h.tipo==='replica'){
+      return `<div class="ctx-box" style="background:#fdf3e8;border-color:#e8c48a">
+        <strong style="color:#854f0b">Réplica do gestor${h.autor?' — '+h.autor:''}</strong> <span style="opacity:.7">(${dataStr})</span><br>${h.texto}
+      </div>`;
+    }
+    if(h.tipo==='resposta_replica'){
+      return `<div class="ctx-box" style="background:#eaf3de">
+        <strong>Resposta do supervisor${h.autor?' — '+h.autor:''}</strong> <span style="opacity:.7">(${dataStr})</span><br>${h.texto}
+      </div>`;
+    }
+    return '';
+  }).join('');
+  return `<div style="font-size:10px;color:#4a7a4a;text-transform:uppercase;letter-spacing:.3px;margin-bottom:6px">Histórico da conversa</div>${itens}<div style="margin-bottom:16px"></div>`;
+}
 
 (async()=>{
   const params=new URLSearchParams(location.search);
@@ -49,10 +75,13 @@ const TIPO_LABEL={'impedimentos':'Impedimentos GBS','erros':'Erros de leitura','
   if(!id){document.getElementById('conteudo').innerHTML='<p style="color:#a32d2d;text-align:center">Link inválido.</p>';return;}
   const {data:t}=await sb.from('tratativas').select('*').eq('id',id).single();
   if(!t){document.getElementById('conteudo').innerHTML='<p style="color:#a32d2d;text-align:center">Tratativa não encontrada.</p>';return;}
+  TRAT=t;
+  const historicoHtml=renderHistorico(t.historico||[]);
   if(t.respondida){
     document.getElementById('conteudo').innerHTML=`
       <div class="titulo">Tratativa já respondida</div>
       <div class="subtitulo">Esta tratativa foi respondida em ${new Date(t.respondida_em).toLocaleString('pt-BR')}.</div>
+      ${historicoHtml}
       <div class="ja-respondido">✓ Resposta registrada com sucesso.<br>Obrigado!</div>`;
     return;
   }
@@ -69,21 +98,44 @@ const TIPO_LABEL={'impedimentos':'Impedimentos GBS','erros':'Erros de leitura','
       ${t.mes_ref?`<strong>Mês de referência:</strong> ${t.mes_ref}<br>`:''}
       <strong>Prazo para resposta:</strong> ${prazoStr}
     </div>
-    ${t.replica_exige_resposta&&t.replica?`
-    <div class="ctx-box" style="background:#fdf3e8;border-color:#e8c48a">
-      <strong style="color:#854f0b">Réplica do gestor${t.replica_por?' — '+t.replica_por:''}:</strong><br>${t.replica}
-    </div>`:''}
+    ${historicoHtml}
+    ${t.replica_exige_resposta?`
+    <div class="form-group">
+      <label>Resposta</label>
+      <textarea id="inp-resposta" placeholder="Responda à réplica do gestor..."></textarea>
+    </div>
+    <button class="btn-verde" id="btn-enviar" onclick="enviarRespostaReplica(${t.id})">Enviar resposta</button>
+    `:`
     <div class="form-group">
       <label>Causa</label>
-      <textarea id="inp-causa" placeholder="Descreva a causa do problema...">${t.replica_exige_resposta?(t.causa||''):''}</textarea>
+      <textarea id="inp-causa" placeholder="Descreva a causa do problema..."></textarea>
     </div>
     <div class="form-group">
       <label>Ação tomada</label>
-      <textarea id="inp-acao" placeholder="O que foi feito para resolver...">${t.replica_exige_resposta?(t.acao_tomada||''):''}</textarea>
+      <textarea id="inp-acao" placeholder="O que foi feito para resolver..."></textarea>
     </div>
     <button class="btn-verde" id="btn-enviar" onclick="enviarResposta(${t.id})">Enviar resposta</button>
+    `}
     <div class="msg" id="msg-resp"></div>`;
 })();
+
+async function enviarRespostaReplica(id){
+  const resposta=document.getElementById('inp-resposta').value.trim();
+  const msg=document.getElementById('msg-resp');
+  const btn=document.getElementById('btn-enviar');
+  if(!resposta){msg.className='msg erro';msg.textContent='Escreva sua resposta.';return;}
+  btn.disabled=true;msg.className='msg';msg.textContent='Enviando...';
+  const hist=(TRAT?.historico)||[];
+  hist.push({tipo:'resposta_replica',texto:resposta,autor:TRAT?.supervisor_nome||'Supervisor',data:new Date().toISOString()});
+  const {error}=await sb.from('tratativas').update({
+    respondida:true, respondida_em:new Date().toISOString(),
+    resposta_replica:resposta, replica_exige_resposta:false, historico:hist,
+  }).eq('id',id);
+  if(error){msg.className='msg erro';msg.textContent='Erro ao salvar. Tente novamente.';btn.disabled=false;return;}
+  document.getElementById('conteudo').innerHTML=`
+    <div class="titulo" style="text-align:center;margin-bottom:12px">✓ Resposta enviada!</div>
+    <div class="ja-respondido">Sua tratativa foi registrada com sucesso.<br>Obrigado!</div>`;
+}
 
 async function enviarResposta(id){
   const causa=document.getElementById('inp-causa').value.trim();
@@ -92,9 +144,11 @@ async function enviarResposta(id){
   const btn=document.getElementById('btn-enviar');
   if(!causa||!acao){msg.className='msg erro';msg.textContent='Preencha a causa e a ação tomada.';return;}
   btn.disabled=true;msg.className='msg';msg.textContent='Enviando...';
+  const hist=(TRAT?.historico)||[];
+  hist.push({tipo:'resposta',causa,acao,autor:TRAT?.supervisor_nome||'Supervisor',data:new Date().toISOString()});
   const {error}=await sb.from('tratativas').update({
     respondida:true, respondida_em:new Date().toISOString(),
-    causa, acao_tomada:acao, replica_exige_resposta:false,
+    causa, acao_tomada:acao, replica_exige_resposta:false, historico:hist,
   }).eq('id',id);
   if(error){msg.className='msg erro';msg.textContent='Erro ao salvar. Tente novamente.';btn.disabled=false;return;}
   document.getElementById('conteudo').innerHTML=`

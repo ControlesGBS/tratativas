@@ -245,6 +245,12 @@ async function carregarPainel(){
                 <span style="font-size:10px;color:#854f0b">${t.replica_em?new Date(t.replica_em).toLocaleString('pt-BR'):''}</span>
               </div>`:''}
 
+            ${t.resposta_replica?`
+              <div style="margin-top:8px;background:#eaf3de;border-left:3px solid #2d7a2d;padding:6px 8px;border-radius:4px">
+                <span style="font-size:9px;color:#27500a;text-transform:uppercase;letter-spacing:.2px">Resposta do supervisor à réplica</span><br>
+                <span>${t.resposta_replica}</span>
+              </div>`:''}
+
             <button onclick="abrirFormReplica(${t.id})" style="margin-top:6px;background:none;border:0.5px solid #d97706;color:#854f0b;border-radius:4px;padding:3px 8px;font-size:10px;cursor:pointer">${t.replica?'Editar réplica':'Replicar'}</button>
             <div id="form-replica-${t.id}" style="display:none;margin-top:6px">
               <textarea id="txt-replica-${t.id}" rows="2" placeholder="Explique por que você não concorda com a resposta..." style="width:100%;border:0.5px solid #d97706;border-radius:4px;padding:6px;font-size:11px;font-family:inherit;resize:vertical">${t.replica||''}</textarea>
@@ -295,6 +301,11 @@ async function salvarReplica(id){
     const novoPrazo=new Date(); novoPrazo.setDate(novoPrazo.getDate()+(cfgPrazo?.prazo_dias||5));
     update.prazo_resposta=novoPrazo.toISOString().split('T')[0];
   }
+  // Adicionar ao histórico da conversa (sem apagar rodadas anteriores)
+  const {data:trAtual}=await sb.from('tratativas').select('historico').eq('id',id).single();
+  const hist=trAtual?.historico||[];
+  hist.push({tipo:'replica',texto:txt,autor:GESTOR_NOME,data:new Date().toISOString()});
+  update.historico=hist;
   await sb.from('tratativas').update(update).eq('id',id);
 
   try{

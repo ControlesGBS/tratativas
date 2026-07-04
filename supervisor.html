@@ -155,13 +155,26 @@ function renderTabela(){
     if(somenteAcompanhar){
       acaoHtml=`<span class="badge b-aco">Tratado pelo TST</span>`;
     } else if(!t.respondida){
-      acaoHtml=`<button class="btn-resp" onclick="window.open('/controles/tratativas/responder.html?id=${t.id}','_blank')">Responder</button>`;
+      acaoHtml=`<button class="btn-resp" onclick="window.open('/controles/tratativas/responder.html?id=${t.id}','_blank')">Responder</button>
+            ${t.replica_exige_resposta&&t.replica?`
+            <div style="margin-top:6px;background:#fdf3e8;border-left:3px solid #d97706;padding:6px 8px;border-radius:4px;font-size:11px;max-width:260px">
+              <span class="resp-label" style="color:#854f0b;margin-top:0">Réplica do gestor${t.replica_por?' — '+t.replica_por:''}</span>${t.replica}
+            </div>`:''}`;
     } else {
       acaoHtml=`<button class="btn-ver" onclick="toggleResp(this)">Ver resposta</button>
             <div class="resp-box">
               <span class="resp-label">Causa</span>${t.causa||'—'}
               <span class="resp-label">Ação tomada</span>${t.acao_tomada||'—'}
               <span style="font-size:10px;color:#4a7a4a;margin-top:4px;display:block">Respondido em ${new Date(t.respondida_em).toLocaleString('pt-BR')}</span>
+              ${t.replica?`
+              <div style="margin-top:8px;background:#fdf3e8;border-left:3px solid #d97706;padding:6px 8px;border-radius:4px">
+                <span class="resp-label" style="color:#854f0b">Réplica do gestor${t.replica_por?' — '+t.replica_por:''}</span>${t.replica}
+                <span style="font-size:10px;color:#854f0b;margin-top:2px;display:block">${t.replica_em?new Date(t.replica_em).toLocaleString('pt-BR'):''}</span>
+              </div>`:''}
+              ${t.resposta_replica?`
+              <div style="margin-top:8px;background:#eaf3de;border-left:3px solid #2d7a2d;padding:6px 8px;border-radius:4px">
+                <span class="resp-label">Sua resposta à réplica</span>${t.resposta_replica}
+              </div>`:''}
             </div>`;
     }
     return `
