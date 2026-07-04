@@ -73,7 +73,7 @@ tbody td{padding:6px 10px;color:#1a2a1a;vertical-align:middle}
   <button class="btn-sair" onclick="sair()">Sair</button>
 </div>
 <div class="nav">
-  <button onclick="location.href='https://gbsservicos.com/controles/teste/index.html'" title="Voltar ao Portal" style="font-size:16px;padding:6px 12px">🏠</button>
+  <button onclick="location.href='https://gbsservicos.com/controles'" title="Voltar ao Portal" style="font-size:16px;padding:6px 12px">🏠</button>
   <button class="ativo" onclick="irPag('painel',this)">Painel</button>
   <button onclick="irPag('config',this)">Configurações</button>
   <button onclick="irPag('manual',this)">Envio manual</button>
@@ -161,7 +161,7 @@ function irPag(id,btn){
   if(id==='config') carregarConfig();
   if(id==='manual') carregarSupervisores();
 }
-async function sair(){await sb.auth.signOut();location.href='../teste/index.html';}
+async function sair(){await sb.auth.signOut();location.href='../';}
 
 function normalizarMes(raw){
   if(!raw) return null;
@@ -180,7 +180,7 @@ let GESTOR_NOME=null;
   if(!user){location.href='../login.html';return;}
   const {data:up}=await sb.from('usuarios_portal').select('nome,perfil,ativo').eq('id',user.id).single();
   if(!up||!up.ativo||!['gestor','gestor1','supervisor_geral'].includes(up.perfil)){
-    location.href='../teste/index.html';return;
+    location.href='../';return;
   }
   GESTOR_NOME=up.nome||user.email;
   document.getElementById('hdr-user').textContent=GESTOR_NOME;

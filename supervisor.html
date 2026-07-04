@@ -3,88 +3,147 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Minhas Tratativas — GBS</title>
+<title>Tratativas — GBS Serviços</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:system-ui,sans-serif;background:#f4f6f4;color:#1a2a1a;font-size:13px}
 .hdr{background:#1a4a1a;color:#fff;padding:10px 20px;display:flex;align-items:center;gap:12px}
-.hdr-logo{width:28px;height:28px;flex-shrink:0}
-.hdr-logo img{width:100%;height:100%;object-fit:contain}
 .hdr-title{font-size:15px;font-weight:500;color:#c8e8c8;flex:1;text-align:center}
 .hdr-user{font-size:11px;color:#90c090}
 .btn-sair{background:none;border:1px solid #4a7a4a;color:#c8e8c8;padding:4px 12px;border-radius:4px;cursor:pointer;font-size:12px}
-.content{padding:16px 20px;max-width:1000px}
-.kpi-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+.nav{display:flex;gap:2px;background:#0f2e0f;padding:6px 20px}
+.nav button{background:none;border:none;color:#90c090;padding:6px 16px;border-radius:4px;cursor:pointer;font-size:13px}
+.nav button.ativo{background:#2d7a2d;color:#fff}
+.nav button:hover:not(.ativo){background:#1a4a1a}
+.pag{display:none;padding:16px 20px}.pag.ativo{display:block}
+.sec{background:#fff;border:0.5px solid #c0dcc0;border-radius:8px;margin-bottom:12px;overflow:hidden}
+.sec-hdr{background:#1a4a1a;color:#c0e8c0;padding:8px 14px;font-size:12px;font-weight:500;display:flex;align-items:center;justify-content:space-between}
+.sec-body{padding:14px}
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
 .kpi{background:#fff;border:0.5px solid #c0dcc0;border-radius:8px;padding:10px 14px;text-align:center}
 .kpi-label{font-size:10px;color:#4a7a4a;text-transform:uppercase;letter-spacing:.3px;margin-bottom:4px}
 .kpi-value{font-size:22px;font-weight:500;color:#1a4a1a}
 .kpi-value.r{color:#a32d2d}.kpi-value.a{color:#854f0b}.kpi-value.g{color:#27500a}
-.filtros{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;align-items:flex-end}
-.filtros label{font-size:11px;color:#4a7a4a;display:block;margin-bottom:3px}
-.filtros select{border:0.5px solid #a0c8a0;border-radius:5px;padding:4px 8px;font-size:12px;background:#f8fbf8;color:#1a2a1a;height:28px}
-.sec{background:#fff;border:0.5px solid #c0dcc0;border-radius:8px;overflow:hidden;margin-bottom:12px}
-.sec-hdr{background:#1a4a1a;color:#c0e8c0;padding:8px 14px;font-size:12px;font-weight:500;display:flex;justify-content:space-between;align-items:center}
-table{width:100%;border-collapse:collapse;font-size:17px}
-thead th{background:#1a4a1a;color:#c0e8c0;padding:8px 12px;text-align:left;font-size:17px;font-weight:500;white-space:nowrap}
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead th{background:#1a4a1a;color:#c0e8c0;padding:6px 10px;text-align:left;font-size:11px;font-weight:500;white-space:nowrap}
 tbody tr{border-bottom:0.5px solid #e0eee0}
 tbody tr:nth-child(even){background:#f8fbf8}
-tbody td{padding:10px 12px;color:#1a2a1a;vertical-align:middle}
+tbody td{padding:6px 10px;color:#1a2a1a;vertical-align:middle}
 .badge{display:inline-block;padding:2px 8px;border-radius:8px;font-size:10px;font-weight:500}
 .b-ab{background:#faeeda;color:#633806}
 .b-re{background:#eaf3de;color:#27500a}
 .b-at{background:#fcebeb;color:#791f1f}
 .b-ga{background:#eeedfe;color:#3c3489}
-.b-aco{background:#e6f1fb;color:#0c447c}
-.btn-resp{background:#2d7a2d;color:#fff;border:none;border-radius:4px;padding:3px 10px;font-size:10px;cursor:pointer}
 .btn-ver{background:none;border:0.5px solid #a0c8a0;color:#1a4a1a;border-radius:4px;padding:3px 10px;font-size:10px;cursor:pointer}
-.resp-box{display:none;margin-top:6px;background:#f0f8f0;border-left:3px solid #2d7a2d;padding:6px 8px;border-radius:4px;font-size:11px;line-height:1.6}
-.resp-label{font-size:9px;color:#4a7a4a;text-transform:uppercase;letter-spacing:.2px;display:block;margin-bottom:1px;margin-top:4px}
+.resp-expand{background:#f0f8f0;border-top:2px solid #2d7a2d;padding:10px 14px;font-size:12px;color:#1a2a1a;line-height:1.6}
+.resp-label{font-size:9px;color:#4a7a4a;text-transform:uppercase;letter-spacing:.2px;margin-bottom:2px;margin-top:8px}
 .resp-label:first-child{margin-top:0}
+.filtros-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;align-items:flex-end}
+.filtros-row label{font-size:11px;color:#4a7a4a;display:block;margin-bottom:3px}
+.filtros-row select{border:0.5px solid #a0c8a0;border-radius:5px;padding:4px 8px;font-size:12px;background:#f8fbf8;color:#1a2a1a;height:28px}
+.gatilho-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:3px solid #c0dcc0;flex-wrap:wrap}
+.gatilho-row:last-child{border-bottom:none}
+.g-nome{font-size:12px;font-weight:500;color:#1a2a1a;min-width:140px}
+.g-desc{font-size:11px;color:#4a7a4a}
+.inp-s{border:0.5px solid #a0c8a0;border-radius:5px;padding:3px 7px;font-size:12px;background:#f8fbf8;color:#1a2a1a;height:26px;width:70px}
+.pill-on{background:#eaf3de;color:#27500a;border:0.5px solid #a0c8a0;border-radius:10px;padding:2px 10px;font-size:10px;font-weight:500;cursor:pointer}
+.pill-off{background:#fcebeb;color:#791f1f;border:0.5px solid #f09595;border-radius:10px;padding:2px 10px;font-size:10px;font-weight:500;cursor:pointer}
+.btn-pause{background:none;border:0.5px solid #f09595;color:#a32d2d;border-radius:4px;padding:3px 10px;font-size:10px;cursor:pointer}
+.btn-pause.pausado{border-color:#a0c8a0;color:#27500a}
+.btn-verde{background:#2d7a2d;color:#fff;border:none;border-radius:6px;padding:7px 18px;font-size:12px;font-weight:500;cursor:pointer}
+.btn-verde:hover{background:#1a5a1a}
+.btn-verde:disabled{background:#90c090;cursor:not-allowed}
 .status-msg{padding:16px;text-align:center;color:#4a7a4a;font-size:12px}
+.manual-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.form-group{display:flex;flex-direction:column;gap:4px}
+.form-group label{font-size:10px;color:#4a7a4a;text-transform:uppercase;letter-spacing:.3px}
+.form-group select,.form-group textarea{border:0.5px solid #a0c8a0;border-radius:5px;padding:6px 8px;font-size:12px;background:#f8fbf8;color:#1a2a1a}
+.form-group textarea{height:70px;resize:none}
+.msg{font-size:11px;margin-top:6px;min-height:16px}
+.msg.ok{color:#16a34a}.msg.erro{color:#a32d2d}
+.vazio{padding:14px;text-align:center;color:#4a7a4a;font-size:12px;font-style:italic}
 </style>
 </head>
 <body>
 <div class="hdr">
-  <div class="hdr-logo"><img src="logo_gbs.png" alt="GBS"></div>
-  <a href="/controles/teste/index.html" title="Início" style="color:#c8e8c8;text-decoration:none;font-size:18px;line-height:1">🏠</a>
-  <div class="hdr-title">MINHAS TRATATIVAS</div>
+  <img src="../jornada/logo_gbs.png" alt="GBS" style="height:36px" onerror="this.style.display='none'">
+  <div class="hdr-title">ÁREA DO GESTOR — TRATATIVAS</div>
   <span class="hdr-user" id="hdr-user"></span>
   <button class="btn-sair" onclick="sair()">Sair</button>
 </div>
+<div class="nav">
+  <button onclick="location.href='https://gbsservicos.com/controles'" title="Voltar ao Portal" style="font-size:16px;padding:6px 12px">🏠</button>
+  <button class="ativo" onclick="irPag('painel',this)">Painel</button>
+  <button onclick="irPag('config',this)">Configurações</button>
+  <button onclick="irPag('manual',this)">Envio manual</button>
+</div>
 
-<div class="content">
-  <div class="kpi-row">
-    <div class="kpi"><div class="kpi-label">Abertas</div><div class="kpi-value a" id="kpi-ab">—</div></div>
-    <div class="kpi"><div class="kpi-label">Respondidas</div><div class="kpi-value g" id="kpi-re">—</div></div>
-    <div class="kpi"><div class="kpi-label">Atrasadas</div><div class="kpi-value r" id="kpi-at">—</div></div>
-  </div>
-
-  <div class="filtros">
+<!-- PAINEL -->
+<div class="pag ativo" id="pag-painel">
+  <div class="filtros-row">
+    <div><label>Mês</label><select id="p-mes" onchange="carregarPainel()"><option value="">Todos</option></select></div>
     <div><label>Status</label>
-      <select id="f-status" onchange="renderTabela()">
+      <select id="p-status" onchange="carregarPainel()">
         <option value="">Todos</option>
         <option value="aberta">Aberta</option>
         <option value="respondida">Respondida</option>
         <option value="atrasada">Atrasada</option>
       </select>
     </div>
-    <div><label>Mês</label>
-      <select id="f-mes" onchange="renderTabela()"><option value="">Todos</option></select>
+    <div><label>Base</label><select id="p-base" onchange="carregarPainel()"><option value="">Todas</option></select></div>
+  </div>
+  <div class="kpi-row">
+    <div class="kpi"><div class="kpi-label">Abertas</div><div class="kpi-value a" id="kpi-ab">—</div></div>
+    <div class="kpi"><div class="kpi-label">Respondidas</div><div class="kpi-value g" id="kpi-re">—</div></div>
+    <div class="kpi"><div class="kpi-label">Atrasadas</div><div class="kpi-value r" id="kpi-at">—</div></div>
+    <div class="kpi"><div class="kpi-label">Total</div><div class="kpi-value" id="kpi-tot">—</div></div>
+  </div>
+  <div class="sec">
+    <div class="sec-hdr"><span>Tratativas</span><span id="p-count" style="font-size:11px;color:#90c090"></span></div>
+    <div style="overflow-x:auto">
+      <table>
+        <thead><tr>
+          <th>Supervisor</th><th>Base</th><th>Leiturista</th><th>Tipo</th><th>Detalhe</th><th>Disparo</th><th>Prazo</th><th>Status</th><th>Resposta</th><th></th>
+        </tr></thead>
+        <tbody id="tbody-painel"><tr><td colspan="9" class="status-msg">Carregando...</td></tr></tbody>
+      </table>
     </div>
   </div>
+</div>
 
+<!-- CONFIG -->
+<div class="pag" id="pag-config">
   <div class="sec">
-    <div class="sec-hdr">
-      <span>Tratativas</span>
-      <span id="count" style="font-size:11px;color:#90c090"></span>
+    <div class="sec-hdr">Configurações de gatilhos</div>
+    <div class="sec-body" id="config-body">
+      <div class="status-msg">Carregando...</div>
     </div>
-    <table>
-      <thead><tr>
-        <th>Tipo</th><th>Base</th><th>Detalhe</th><th>Mês</th><th>Prazo</th><th>Status</th><th>Ação</th>
-      </tr></thead>
-      <tbody id="tbody"><tr><td colspan="7" class="status-msg">Carregando...</td></tr></tbody>
-    </table>
+  </div>
+</div>
+
+<!-- MANUAL -->
+<div class="pag" id="pag-manual">
+  <div class="sec">
+    <div class="sec-hdr">Envio manual de tratativa</div>
+    <div class="sec-body">
+      <div class="manual-grid">
+        <div class="form-group">
+          <label>Supervisor destinatário</label>
+          <select id="m-sup"><option value="">Selecione...</option></select>
+        </div>
+        <div class="form-group">
+          <label>Mensagem / Ocorrência</label>
+          <textarea id="m-msg" placeholder="Descreva a ocorrência..."></textarea>
+        </div>
+        <div class="form-group">
+          <label>Prazo para resposta</label>
+          <input type="date" id="m-prazo" style="border:0.5px solid #a0c8a0;border-radius:5px;padding:6px 8px;font-size:12px;background:#f8fbf8;color:#1a2a1a;height:32px;width:100%">
+        </div>
+      </div>
+      <button class="btn-verde" style="margin-top:10px" onclick="enviarManual()">Enviar email</button>
+      <div class="msg" id="m-msg-status"></div>
+    </div>
   </div>
 </div>
 
@@ -92,113 +151,613 @@ tbody td{padding:10px 12px;color:#1a2a1a;vertical-align:middle}
 const SUPABASE_URL='https://ndwivbhqglpnfyqwjbzu.supabase.co';
 const SUPABASE_KEY='sb_publishable_IhuNziyT5VYrMKRixcPGjA_LAn5ku-7';
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-const TIPO={'impedimentos':'Impedimentos','erros':'Erros leitura','meta':'Meta leituras','inicio_tardio':'Início tardio','manual':'Manual','transmissoes':'Transmissões pendentes','releituras':'Releituras pendentes','velocidade':'Excesso de Velocidade'};
-const TST_BASES={
-  'tst_passos':['Guaxupé','Passos','SSP'],
-  'tst_pouso_alegre':['Pouso Alegre','Alfenas','Ouro Fino','Andradas']
-};
-let LISTA=[];
-let SOU_TST=false;
+let CFG=null;
 
-async function sair(){await sb.auth.signOut();location.href='/controles/teste/index.html';}
+function irPag(id,btn){
+  document.querySelectorAll('.pag').forEach(p=>p.classList.remove('ativo'));
+  document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('ativo'));
+  document.getElementById('pag-'+id).classList.add('ativo');
+  btn.classList.add('ativo');
+  if(id==='config') carregarConfig();
+  if(id==='manual') carregarSupervisores();
+}
+async function sair(){await sb.auth.signOut();location.href='../';}
 
-(async()=>{
-  const {data:{user}}=await sb.auth.getUser();
-  if(!user){location.href='/controles/teste/index.html';return;}
-  const {data:up}=await sb.from('usuarios_portal').select('nome,perfil,ativo,base').eq('id',user.id).single();
-  if(!up||!up.ativo){location.href='/controles/teste/index.html';return;}
-  document.getElementById('hdr-user').textContent=up.nome||user.email;
-
-  SOU_TST=['tst_passos','tst_pouso_alegre'].includes(up.perfil);
-
-  let q=sb.from('tratativas').select('*').order('created_at',{ascending:false});
-  if(SOU_TST){
-    q=q.eq('tipo','velocidade').in('base',TST_BASES[up.perfil]||[]);
-  } else if(up.base){
-    q=q.filter('base','ilike',up.base);
-  } else {
-    q=q.eq('supervisor_id',user.id);
+function normalizarMes(raw){
+  if(!raw) return null;
+  // aceita 'yyyy-mm-01', 'yyyy-mm' ou 'mm/yyyy' e sempre devolve 'MM/AAAA'
+  if(/^\d{4}-\d{2}/.test(raw)){
+    const [aa,mm]=raw.slice(0,7).split('-');
+    return `${mm}/${aa}`;
   }
-  const {data:trats}=await q;
-  LISTA=trats||[];
-
-  // Popular filtro meses
-  const meses=[...new Set(LISTA.map(t=>t.mes_ref).filter(Boolean))].sort().reverse();
-  const selMes=document.getElementById('f-mes');
-  meses.forEach(m=>selMes.innerHTML+=`<option value="${m}">${m}</option>`);
-
-  renderTabela();
-})();
-
-function renderTabela(){
-  const status=document.getElementById('f-status').value;
-  const mes=document.getElementById('f-mes').value;
-  const hoje=new Date(); hoje.setHours(0,0,0,0);
-
-  let lista=LISTA.map(t=>({...t,
-    sc:t.respondida?'respondida':new Date(t.prazo_resposta)<hoje?'atrasada':'aberta'
-  }));
-  if(status) lista=lista.filter(t=>t.sc===status);
-  if(mes) lista=lista.filter(t=>t.mes_ref===mes);
-
-  document.getElementById('kpi-ab').textContent=LISTA.filter(t=>!t.respondida&&new Date(t.prazo_resposta)>=hoje).length;
-  document.getElementById('kpi-re').textContent=LISTA.filter(t=>t.respondida).length;
-  document.getElementById('kpi-at').textContent=LISTA.filter(t=>!t.respondida&&new Date(t.prazo_resposta)<hoje).length;
-  document.getElementById('count').textContent=`${lista.length} tratativa(s)`;
-
-  const BC={respondida:'b-re',atrasada:'b-at',aberta:'b-ab'};
-  const BT={respondida:'Respondida',atrasada:'Atrasada',aberta:'Aberta'};
-
-  document.getElementById('tbody').innerHTML=lista.length?lista.map(t=>{
-    const somenteAcompanhar=t.tipo==='velocidade'&&!SOU_TST;
-    let acaoHtml;
-    if(somenteAcompanhar){
-      acaoHtml=`<span class="badge b-aco">Tratado pelo TST</span>`;
-    } else if(!t.respondida){
-      acaoHtml=`<button class="btn-resp" onclick="window.open('/controles/tratativas/responder.html?id=${t.id}','_blank')">Responder</button>
-            ${t.replica_exige_resposta&&t.replica?`
-            <div style="margin-top:6px;background:#fdf3e8;border-left:3px solid #d97706;padding:6px 8px;border-radius:4px;font-size:11px;max-width:260px">
-              <span class="resp-label" style="color:#854f0b;margin-top:0">Réplica do gestor${t.replica_por?' — '+t.replica_por:''}</span>${t.replica}
-            </div>`:''}`;
-    } else {
-      acaoHtml=`<button class="btn-ver" onclick="toggleResp(this)">Ver resposta</button>
-            <div class="resp-box">
-              <span class="resp-label">Causa</span>${t.causa||'—'}
-              <span class="resp-label">Ação tomada</span>${t.acao_tomada||'—'}
-              <span style="font-size:10px;color:#4a7a4a;margin-top:4px;display:block">Respondido em ${new Date(t.respondida_em).toLocaleString('pt-BR')}</span>
-              ${t.replica?`
-              <div style="margin-top:8px;background:#fdf3e8;border-left:3px solid #d97706;padding:6px 8px;border-radius:4px">
-                <span class="resp-label" style="color:#854f0b">Réplica do gestor${t.replica_por?' — '+t.replica_por:''}</span>${t.replica}
-                <span style="font-size:10px;color:#854f0b;margin-top:2px;display:block">${t.replica_em?new Date(t.replica_em).toLocaleString('pt-BR'):''}</span>
-              </div>`:''}
-              ${t.resposta_replica?`
-              <div style="margin-top:8px;background:#eaf3de;border-left:3px solid #2d7a2d;padding:6px 8px;border-radius:4px">
-                <span class="resp-label">Sua resposta à réplica</span>${t.resposta_replica}
-              </div>`:''}
-            </div>`;
-    }
-    return `
-    <tr>
-      <td><span class="badge b-ga">${TIPO[t.tipo]||t.tipo}</span></td>
-      <td style="font-size:14px">${t.base||'—'}</td>
-      <td style="max-width:280px">${t.detalhe||'—'}</td>
-      <td>${t.mes_ref||'—'}</td>
-      <td>${t.prazo_resposta?new Date(t.prazo_resposta+'T12:00:00').toLocaleDateString('pt-BR'):'—'}</td>
-      <td>
-        <span class="badge ${BC[t.sc]}">${BT[t.sc]}</span>
-        ${t.respondida&&t.respondida_em?` <span style="font-size:10px;color:#4a7a4a">${new Date(t.respondida_em).toLocaleDateString('pt-BR')}</span>`:''}
-      </td>
-      <td>${acaoHtml}</td>
-    </tr>`;
-  }).join('')
-    :'<tr><td colspan="7" class="status-msg">Nenhuma tratativa encontrada.</td></tr>';
+  return raw;
 }
 
-function toggleResp(btn){
-  const box=btn.nextElementSibling;
-  const vis=box.style.display==='none'||!box.style.display;
-  box.style.display=vis?'block':'none';
+// ── INIT ─────────────────────────────────────────────────────────
+let GESTOR_NOME=null;
+(async()=>{
+  const {data:{user}}=await sb.auth.getUser();
+  if(!user){location.href='../login.html';return;}
+  const {data:up}=await sb.from('usuarios_portal').select('nome,perfil,ativo').eq('id',user.id).single();
+  if(!up||!up.ativo||!['gestor','gestor1','supervisor_geral'].includes(up.perfil)){
+    location.href='../';return;
+  }
+  GESTOR_NOME=up.nome||user.email;
+  document.getElementById('hdr-user').textContent=GESTOR_NOME;
+  // Registrar acesso
+  await sb.from('usuarios_ultimo_acesso').upsert({user_id:user.id,ultimo_acesso:new Date().toISOString()});
+  // Popular filtros
+  const selMes=document.getElementById('p-mes');
+  const {data:mesesData}=await sb.from('tratativas').select('mes_ref');
+  const mesesUniq=[...new Set((mesesData||[]).map(r=>normalizarMes(r.mes_ref)).filter(Boolean))];
+
+  mesesUniq
+    .sort((a,b)=>b.split('/').reverse().join('')-a.split('/').reverse().join(''))
+    .forEach(mesNorm=>{ selMes.innerHTML+=`<option value="${mesNorm}">${mesNorm}</option>`; });
+
+  const {data:bases}=await sb.from('local_base').select('base').order('base');
+  const basesUniq=[...new Set((bases||[]).map(r=>r.base).filter(Boolean))];
+  const selBase=document.getElementById('p-base');
+  basesUniq.forEach(b=>selBase.innerHTML+=`<option value="${b}">${b}</option>`);
+  await carregarPainel();
+})();
+
+// ── PAINEL ────────────────────────────────────────────────────────
+async function carregarPainel(){
+  document.getElementById('tbody-painel').innerHTML='<tr><td colspan="10" class="status-msg">Carregando...</td></tr>';
+  const mes=document.getElementById('p-mes').value;
+  const status=document.getElementById('p-status').value;
+  const base=document.getElementById('p-base').value;
+  let q=sb.from('tratativas').select('*').order('created_at',{ascending:false});
+  if(base) q=q.eq('base',base);
+  const {data:trats}=await q;
+  let lista=trats||[];
+  if(mes) lista=lista.filter(t=>normalizarMes(t.mes_ref)===mes);
+  const hoje=new Date(); hoje.setHours(0,0,0,0);
+  // Calcular status
+  lista=lista.map(t=>({...t,
+    status_calc: t.respondida?'respondida': new Date(t.prazo_resposta)<hoje?'atrasada':'aberta'
+  }));
+  if(status) lista=lista.filter(t=>t.status_calc===status);
+  // KPIs
+  document.getElementById('kpi-ab').textContent=lista.filter(t=>t.status_calc==='aberta').length;
+  document.getElementById('kpi-re').textContent=lista.filter(t=>t.status_calc==='respondida').length;
+  document.getElementById('kpi-at').textContent=lista.filter(t=>t.status_calc==='atrasada').length;
+  document.getElementById('kpi-tot').textContent=lista.length;
+  document.getElementById('p-count').textContent=`${lista.length} tratativa(s)`;
+  const TIPO={'impedimentos':'Impedimentos','erros':'Erros leitura','meta':'Meta leituras','inicio_tardio':'Início tardio','termino_tardio':'Término tardio','manual':'Manual'};
+  const BADGEC={'respondida':'b-re','atrasada':'b-at','aberta':'b-ab'};
+  const BADGET={'respondida':'Respondida','atrasada':'Atrasada','aberta':'Aberta'};
+  document.getElementById('tbody-painel').innerHTML=lista.length?lista.map((t,i)=>`
+    <tr id="tr-${t.id}">
+      <td>${t.supervisor_nome||'—'}</td>
+      <td>${t.base||'—'}</td>
+      <td>${t.nome_leiturista||t.matricula||'—'}</td>
+      <td><span class="badge b-ga">${TIPO[t.tipo]||t.tipo}</span></td>
+      <td style="max-width:180px;font-size:11px">${t.detalhe||'—'}</td>
+      <td>${t.created_at?new Date(t.created_at).toLocaleDateString('pt-BR'):'—'}</td>
+      <td>${t.prazo_resposta?new Date(t.prazo_resposta+'T12:00:00').toLocaleDateString('pt-BR'):'—'}</td>
+      <td><span class="badge ${BADGEC[t.status_calc]}">${BADGET[t.status_calc]}</span>${t.respondida&&t.respondida_em?` <span style="font-size:10px;color:#4a7a4a">${new Date(t.respondida_em).toLocaleDateString('pt-BR')}</span>`:''}</td>
+      <td style="min-width:120px">
+        ${t.respondida?`
+          <button class="btn-ver" onclick="toggleResp(${t.id},this)">Ver resposta</button>
+          <div id="resp-${t.id}" style="display:none;margin-top:6px;background:#f0f8f0;border-left:3px solid #2d7a2d;padding:6px 8px;border-radius:4px;font-size:11px;line-height:1.5">
+            <span style="font-size:9px;color:#4a7a4a;text-transform:uppercase;letter-spacing:.2px">Causa</span><br>
+            <span>${t.causa||'—'}</span><br>
+            <span style="font-size:9px;color:#4a7a4a;text-transform:uppercase;letter-spacing:.2px;margin-top:4px;display:block">Ação tomada</span>
+            <span>${t.acao_tomada||'—'}</span><br>
+            <span style="font-size:10px;color:#4a7a4a">${t.respondida_em?new Date(t.respondida_em).toLocaleString('pt-BR'):''}</span>
+
+            ${t.replica?`
+              <div style="margin-top:8px;background:#fdf3e8;border-left:3px solid #d97706;padding:6px 8px;border-radius:4px">
+                <span style="font-size:9px;color:#854f0b;text-transform:uppercase;letter-spacing:.2px">Réplica do gestor${t.replica_por?' - '+t.replica_por:''}</span><br>
+                <span>${t.replica}</span><br>
+                <span style="font-size:10px;color:#854f0b">${t.replica_em?new Date(t.replica_em).toLocaleString('pt-BR'):''}</span>
+              </div>`:''}
+
+            ${t.resposta_replica?`
+              <div style="margin-top:8px;background:#eaf3de;border-left:3px solid #2d7a2d;padding:6px 8px;border-radius:4px">
+                <span style="font-size:9px;color:#27500a;text-transform:uppercase;letter-spacing:.2px">Resposta do supervisor à réplica</span><br>
+                <span>${t.resposta_replica}</span>
+              </div>`:''}
+
+            <button onclick="abrirFormReplica(${t.id})" style="margin-top:6px;background:none;border:0.5px solid #d97706;color:#854f0b;border-radius:4px;padding:3px 8px;font-size:10px;cursor:pointer">${t.replica?'Editar réplica':'Replicar'}</button>
+            <div id="form-replica-${t.id}" style="display:none;margin-top:6px">
+              <textarea id="txt-replica-${t.id}" rows="2" placeholder="Explique por que você não concorda com a resposta..." style="width:100%;border:0.5px solid #d97706;border-radius:4px;padding:6px;font-size:11px;font-family:inherit;resize:vertical">${t.replica||''}</textarea>
+              <label style="display:flex;align-items:center;gap:4px;margin-top:4px;font-size:10px;color:#854f0b;cursor:pointer">
+                <input type="checkbox" id="chk-exige-${t.id}" ${t.replica_exige_resposta?'checked':''}> Pedir nova resposta do supervisor (reabre a tratativa)
+              </label>
+              <button onclick="salvarReplica(${t.id})" style="margin-top:4px;background:#d97706;color:#fff;border:none;border-radius:4px;padding:3px 10px;font-size:10px;cursor:pointer">Enviar Réplica</button>
+            </div>
+          </div>`:'—'}
+      </td>
+      <td><button onclick="deletarTratativa(${t.id})" style="background:none;border:0.5px solid #f09595;color:#a32d2d;border-radius:4px;padding:3px 8px;font-size:10px;cursor:pointer">Deletar</button></td>
+    </tr>`)
+  .join(''):'<tr><td colspan="10" class="status-msg">Nenhuma tratativa encontrada.</td></tr>';
+}
+
+async function deletarTratativa(id){
+  const senha=prompt('Senha para deletar:');
+  if(senha!=='Batman1'){if(senha!==null)alert('Senha incorreta.');return;}
+  if(!confirm('Confirma a exclusão desta tratativa?')) return;
+  await sb.from('tratativas').delete().eq('id',id);
+  await carregarPainel();
+}
+
+function toggleResp(id,btn){
+  const el=document.getElementById(`resp-${id}`);
+  if(!el) return;
+  const vis=el.style.display==='none';
+  el.style.display=vis?'block':'none';
   btn.textContent=vis?'Minimizar':'Ver resposta';
+}
+
+function abrirFormReplica(id){
+  const form=document.getElementById(`form-replica-${id}`);
+  if(!form) return;
+  form.style.display=form.style.display==='none'?'block':'none';
+}
+
+async function salvarReplica(id){
+  const txt=document.getElementById(`txt-replica-${id}`).value.trim();
+  if(!txt){alert('Escreva a réplica antes de salvar.');return;}
+  const exigeResposta=document.getElementById(`chk-exige-${id}`)?.checked||false;
+
+  const update={replica:txt,replica_em:new Date().toISOString(),replica_por:GESTOR_NOME,replica_exige_resposta:exigeResposta};
+  if(exigeResposta){
+    update.respondida=false; update.respondida_em=null;
+    // Renovar prazo, já que o prazo antigo pode já ter passado
+    const {data:cfgPrazo}=await sb.from('tratativas_config').select('prazo_dias').single();
+    const novoPrazo=new Date(); novoPrazo.setDate(novoPrazo.getDate()+(cfgPrazo?.prazo_dias||5));
+    update.prazo_resposta=novoPrazo.toISOString().split('T')[0];
+  }
+  // Adicionar ao histórico da conversa (sem apagar rodadas anteriores)
+  const {data:trAtual}=await sb.from('tratativas').select('historico').eq('id',id).single();
+  const hist=trAtual?.historico||[];
+  hist.push({tipo:'replica',texto:txt,autor:GESTOR_NOME,data:new Date().toISOString()});
+  update.historico=hist;
+  await sb.from('tratativas').update(update).eq('id',id);
+
+  try{
+    const {data:trat}=await sb.from('tratativas').select('supervisor_nome,supervisor_email,base,tipo,detalhe').eq('id',id).single();
+    if(trat?.supervisor_email){
+      const link=`${location.origin}/controles/tratativas/responder.html?id=${id}`;
+      const {assunto,corpo}=montarEmailReplica({supNome:trat.supervisor_nome,base:trat.base,tipo:trat.tipo,detalhe:trat.detalhe,replicaTxt:txt,replicaPor:GESTOR_NOME,exigeResposta,link});
+      await fetch(`${SUPABASE_URL}/functions/v1/enviar-email`,{
+        method:'POST',
+        headers:{'Content-Type':'application/json','Authorization':`Bearer ${SUPABASE_KEY}`},
+        body:JSON.stringify({para:trat.supervisor_email,assunto,corpo})
+      });
+    }
+  }catch(e){ console.error('Erro ao enviar email de réplica:',e); }
+
+  await carregarPainel();
+}
+
+// ── CONFIG ────────────────────────────────────────────────────────
+async function carregarConfig(){
+  const {data:cfg}=await sb.from('tratativas_config').select('*').single();
+  if(!cfg){document.getElementById('config-body').innerHTML='<div class="status-msg">Erro ao carregar.</div>';return;}
+  CFG=cfg;
+  document.getElementById('config-body').innerHTML=`
+    <div class="gatilho-row">
+      <span class="g-nome">Impedimentos GBS</span>
+      <span class="g-desc">A cada</span>
+      <input class="inp-s" id="c-imp-qtd" value="${cfg.impedimentos_qtd}">
+      <span class="g-desc">imp. por leiturista &nbsp;·&nbsp; Prazo:</span>
+      <input class="inp-s" id="c-prazo-imp" value="${cfg.prazo_imp||5}" style="width:45px;text-align:center">
+      <span class="g-desc">dias</span>
+      <span class="${cfg.impedimentos_ativo?'pill-on':'pill-off'}" onclick="toggleAtivo('impedimentos_ativo',this)">${cfg.impedimentos_ativo?'Ativo':'Inativo'}</span>
+      <button class="btn-pause${cfg.impedimentos_email_pausado?' pausado':''}" onclick="togglePausa('impedimentos_email_pausado',this)">${cfg.impedimentos_email_pausado?'Email pausado':'Pausar email'}</button>
+    </div>
+    <div class="gatilho-row">
+      <span class="g-nome">Erros de leitura</span>
+      <span class="g-desc">A partir de</span>
+      <input class="inp-s" id="c-err-qtd" value="${cfg.erros_qtd}">
+      <span class="g-desc">erros por leiturista &nbsp;·&nbsp; Prazo:</span>
+      <input class="inp-s" id="c-prazo-err" value="${cfg.prazo_err||5}" style="width:45px;text-align:center">
+      <span class="g-desc">dias</span>
+      <span class="${cfg.erros_ativo?'pill-on':'pill-off'}" onclick="toggleAtivo('erros_ativo',this)">${cfg.erros_ativo?'Ativo':'Inativo'}</span>
+      <button class="btn-pause${cfg.erros_email_pausado?' pausado':''}" onclick="togglePausa('erros_email_pausado',this)">${cfg.erros_email_pausado?'Email pausado':'Pausar email'}</button>
+    </div>
+    <div class="gatilho-row">
+      <span class="g-nome">Meta de leituras</span>
+      <span class="g-desc">Urbano</span><input class="inp-s" id="c-meta-urb" value="${cfg.meta_urb}">
+      <span class="g-desc">Rural</span><input class="inp-s" id="c-meta-rur" value="${cfg.meta_rur}">
+      <span class="g-desc">&nbsp;·&nbsp; Prazo:</span>
+      <input class="inp-s" id="c-prazo-meta" value="${cfg.prazo_meta||5}" style="width:45px;text-align:center">
+      <span class="g-desc">dias</span>
+      <span class="${cfg.meta_ativo?'pill-on':'pill-off'}" onclick="toggleAtivo('meta_ativo',this)">${cfg.meta_ativo?'Ativo':'Inativo'}</span>
+      <button class="btn-pause${cfg.meta_email_pausado?' pausado':''}" onclick="togglePausa('meta_email_pausado',this)">${cfg.meta_email_pausado?'Email pausado':'Pausar email'}</button>
+    </div>
+    <div class="gatilho-row">
+      <span class="g-nome">Início tardio</span>
+      <span class="g-desc">Acima de</span>
+      <input class="inp-s" id="c-ini-hora" value="${cfg.inicio_tardio_hora}" style="width:70px">
+      <span class="g-desc">&nbsp;·&nbsp; Prazo:</span>
+      <input class="inp-s" id="c-prazo-ini" value="${cfg.prazo_ini||5}" style="width:45px;text-align:center">
+      <span class="g-desc">dias</span>
+      <span class="${cfg.inicio_tardio_ativo?'pill-on':'pill-off'}" onclick="toggleAtivo('inicio_tardio_ativo',this)">${cfg.inicio_tardio_ativo?'Ativo':'Inativo'}</span>
+      <button class="btn-pause${cfg.inicio_tardio_email_pausado?' pausado':''}" onclick="togglePausa('inicio_tardio_email_pausado',this)">${cfg.inicio_tardio_email_pausado?'Email pausado':'Pausar email'}</button>
+    </div>
+    <div class="gatilho-row">
+      <span class="g-nome">Término tardio</span>
+      <span class="g-desc">Acima de</span>
+      <input class="inp-s" id="c-term-hora" value="${cfg.termino_tardio_hora||'18:00'}" style="width:70px">
+      <span class="g-desc">&nbsp;·&nbsp; Prazo:</span>
+      <input class="inp-s" id="c-prazo-term" value="${cfg.prazo_termino||5}" style="width:45px;text-align:center">
+      <span class="g-desc">dias</span>
+      <span class="${cfg.termino_tardio_ativo?'pill-on':'pill-off'}" onclick="toggleAtivo('termino_tardio_ativo',this)">${cfg.termino_tardio_ativo?'Ativo':'Inativo'}</span>
+      <button class="btn-pause${cfg.termino_tardio_email_pausado?' pausado':''}" onclick="togglePausa('termino_tardio_email_pausado',this)">${cfg.termino_tardio_email_pausado?'Email pausado':'Pausar email'}</button>
+    </div>
+    <div class="gatilho-row">
+      <span class="g-nome">Velocidade</span>
+      <span class="g-desc">Acima de</span>
+      <input class="inp-s" id="c-vel-kmh" value="${cfg.velocidade_kmh||80}" style="width:60px">
+      <span class="g-desc">km/h &nbsp;·&nbsp; Prazo:</span>
+      <input class="inp-s" id="c-prazo-vel" value="${cfg.prazo_vel||5}" style="width:45px;text-align:center">
+      <span class="g-desc">dias</span>
+      <span class="${cfg.velocidade_ativo?'pill-on':'pill-off'}" onclick="toggleAtivo('velocidade_ativo',this)">${cfg.velocidade_ativo?'Ativo':'Inativo'}</span>
+      <button class="btn-pause${cfg.velocidade_email_pausado?' pausado':''}" onclick="togglePausa('velocidade_email_pausado',this)">${cfg.velocidade_email_pausado?'Email pausado':'Pausar email'}</button>
+    </div>
+    <div style="display:flex;justify-content:flex-end;margin-top:12px">
+      <button class="btn-verde" onclick="salvarConfig()">Salvar configurações</button>
+    </div>
+    <div class="msg" id="cfg-msg"></div>`;
+}
+
+async function toggleAtivo(campo,el){
+  const senha=prompt('Senha para alterar:');
+  if(senha!=='GBS@2026'){if(senha!==null)alert('Senha incorreta.');return;}
+  const novoVal=!CFG[campo];
+  await sb.from('tratativas_config').update({[campo]:novoVal}).eq('id',CFG.id);
+  CFG[campo]=novoVal;
+  el.className=novoVal?'pill-on':'pill-off';
+  el.textContent=novoVal?'Ativo':'Inativo';
+}
+
+async function togglePausa(campo,btn){
+  const senha=prompt('Senha para alterar:');
+  if(senha!=='GBS@2026'){if(senha!==null)alert('Senha incorreta.');return;}
+  const novoVal=!CFG[campo];
+  await sb.from('tratativas_config').update({[campo]:novoVal}).eq('id',CFG.id);
+  CFG[campo]=novoVal;
+  btn.className='btn-pause'+(novoVal?' pausado':'');
+  btn.textContent=novoVal?'Email pausado':'Pausar email';
+}
+
+async function salvarConfig(){
+  const updates={
+    impedimentos_qtd:parseInt(document.getElementById('c-imp-qtd').value)||10,
+    erros_qtd:parseInt(document.getElementById('c-err-qtd').value)||1,
+    meta_urb:parseInt(document.getElementById('c-meta-urb').value)||100,
+    meta_rur:parseInt(document.getElementById('c-meta-rur').value)||60,
+    inicio_tardio_hora:document.getElementById('c-ini-hora').value||'09:00',
+    termino_tardio_hora:document.getElementById('c-term-hora').value||'18:00',
+    prazo_imp:parseInt(document.getElementById('c-prazo-imp').value)||5,
+    prazo_err:parseInt(document.getElementById('c-prazo-err').value)||5,
+    prazo_meta:parseInt(document.getElementById('c-prazo-meta').value)||5,
+    prazo_ini:parseInt(document.getElementById('c-prazo-ini').value)||5,
+    prazo_termino:parseInt(document.getElementById('c-prazo-term').value)||5,
+    velocidade_kmh:parseInt(document.getElementById('c-vel-kmh').value)||80,
+    prazo_vel:parseInt(document.getElementById('c-prazo-vel').value)||5,
+    updated_at:new Date().toISOString(),
+  };
+  const {error}=await sb.from('tratativas_config').update(updates).eq('id',CFG.id);
+  const msg=document.getElementById('cfg-msg');
+  if(error){msg.className='msg erro';msg.textContent='Erro ao salvar.';}
+  else{msg.className='msg ok';msg.textContent='✓ Configurações salvas!';Object.assign(CFG,updates);}
+}
+
+// ── TEMPLATE DE EMAIL ─────────────────────────────────────────────
+function montarEmailReplica({supNome, base, tipo, detalhe, replicaTxt, replicaPor, exigeResposta, link}){
+  const TIPO_LABEL={'impedimentos':'Impedimentos GBS','erros':'Erros de leitura','meta':'Meta de leituras','inicio_tardio':'Início tardio','termino_tardio':'Término tardio','manual':'Manual','transmissoes':'Transmissões pendentes','releituras':'Releituras pendentes','velocidade':'Excesso de Velocidade'};
+  const tipoLabel=TIPO_LABEL[tipo]||tipo;
+  return {
+    assunto:'Gestão de Controles - Réplica à sua resposta',
+    corpo:`
+<div style="font-family:system-ui,sans-serif;max-width:500px;margin:0 auto;color:#1a2a1a">
+  <div style="background:#1a4a1a;padding:14px 20px;border-radius:8px 8px 0 0">
+    <span style="color:#c8e8c8;font-weight:500;font-size:15px">GBS Serviços — Gestão de Controles</span>
+  </div>
+  <div style="background:#fff;border:0.5px solid #c0dcc0;padding:20px;border-radius:0 0 8px 8px">
+    <p style="margin-bottom:14px">Olá, <strong>${supNome}</strong>!</p>
+    <p style="margin-bottom:14px">O gestor não concordou com sua resposta na tratativa abaixo e deixou uma réplica.</p>
+    <table style="width:100%;border-collapse:collapse;margin-bottom:16px;font-size:13px">
+      ${base?`<tr><td style="padding:6px 10px;border:0.5px solid #c0dcc0;background:#f8fbf8;font-weight:500;width:35%">Base</td><td style="padding:6px 10px;border:0.5px solid #c0dcc0">${base}</td></tr>`:''}
+      <tr><td style="padding:6px 10px;border:0.5px solid #c0dcc0;background:#f8fbf8;font-weight:500">Tipo</td><td style="padding:6px 10px;border:0.5px solid #c0dcc0">${tipoLabel}</td></tr>
+      <tr><td style="padding:6px 10px;border:0.5px solid #c0dcc0;background:#f8fbf8;font-weight:500">Ocorrência</td><td style="padding:6px 10px;border:0.5px solid #c0dcc0">${detalhe||'—'}</td></tr>
+    </table>
+    <div style="background:#fdf3e8;border-left:3px solid #d97706;padding:10px 14px;border-radius:4px;margin-bottom:16px">
+      <span style="font-size:11px;color:#854f0b;text-transform:uppercase;letter-spacing:.2px">Réplica do gestor${replicaPor?' — '+replicaPor:''}</span><br>
+      <span style="font-size:13px">${replicaTxt}</span>
+    </div>
+    ${exigeResposta?`
+    <p style="margin-bottom:16px">Por favor, registre uma nova resposta clicando no botão abaixo.</p>
+    <div style="text-align:center;margin-bottom:20px"><a href="${link}" style="background:#2d7a2d;color:#fff;padding:10px 28px;border-radius:6px;text-decoration:none;font-weight:500;font-size:13px">RESPONDER NOVAMENTE</a></div>
+    `:`
+    <p style="margin-bottom:16px;font-size:12px;color:#4a7a4a">Este é apenas um comentário informativo — não é necessário responder novamente.</p>
+    `}
+    <p style="font-size:11px;color:#4a7a4a;border-top:0.5px solid #c0dcc0;padding-top:12px">
+      At.te<br><strong>Gestão de Controles</strong>
+    </p>
+  </div>
+</div>`
+  };
+}
+
+function montarEmail({supNome, base, tipo, ocorrencia, prazoStr, link}){
+  const TIPO_LABEL={'impedimentos':'Impedimentos GBS','erros':'Erros de leitura','meta':'Meta de leituras','inicio_tardio':'Início tardio','termino_tardio':'Término tardio','manual':'Manual','transmissoes':'Transmissões pendentes','releituras':'Releituras pendentes','velocidade':'Excesso de Velocidade'};
+  const tipoLabel=TIPO_LABEL[tipo]||tipo;
+  return {
+    assunto:'Gestão de Controles - Ação atribuída a você',
+    corpo:`
+<div style="font-family:system-ui,sans-serif;max-width:500px;margin:0 auto;color:#1a2a1a">
+  <div style="background:#1a4a1a;padding:14px 20px;border-radius:8px 8px 0 0">
+    <span style="color:#c8e8c8;font-weight:500;font-size:15px">GBS Serviços — Gestão de Controles</span>
+  </div>
+  <div style="background:#fff;border:0.5px solid #c0dcc0;padding:20px;border-radius:0 0 8px 8px">
+    <p style="margin-bottom:14px">Olá, <strong>${supNome}</strong>!</p>
+    <p style="margin-bottom:14px">Uma ocorrência foi identificada e requer sua atenção.</p>
+    <table style="width:100%;border-collapse:collapse;margin-bottom:16px;font-size:13px">
+      ${base?`<tr><td style="padding:6px 10px;border:0.5px solid #c0dcc0;background:#f8fbf8;font-weight:500;width:35%">Base</td><td style="padding:6px 10px;border:0.5px solid #c0dcc0">${base}</td></tr>`:''}
+      <tr><td style="padding:6px 10px;border:0.5px solid #c0dcc0;background:#f8fbf8;font-weight:500">Tipo</td><td style="padding:6px 10px;border:0.5px solid #c0dcc0">${tipoLabel}</td></tr>
+      <tr><td style="padding:6px 10px;border:0.5px solid #c0dcc0;background:#f8fbf8;font-weight:500">Ocorrência</td><td style="padding:6px 10px;border:0.5px solid #c0dcc0">${ocorrencia}</td></tr>
+    </table>
+    <p style="margin-bottom:16px">Por favor, registre a tratativa até <strong>${prazoStr}</strong> clicando no botão abaixo.</p>
+    <div style="text-align:center;margin-bottom:20px">
+      <a href="${link}" style="background:#2d7a2d;color:#fff;padding:10px 28px;border-radius:6px;text-decoration:none;font-weight:500;font-size:13px">REGISTRAR TRATATIVA</a>
+    </div>
+    <p style="font-size:11px;color:#4a7a4a;border-top:0.5px solid #c0dcc0;padding-top:12px">
+      At.te<br><strong>Gestão de Controles</strong>
+    </p>
+  </div>
+</div>`
+  };
+}
+
+// ── TRANSMISSÕES / RELEITURAS ─────────────────────────────────────
+function diasCorridos(dataStr){
+  if(!dataStr) return null;
+  const hoje=new Date(); hoje.setHours(0,0,0,0);
+  const d=new Date(dataStr+'T12:00:00'); d.setHours(0,0,0,0);
+  return Math.floor((hoje-d)/(1000*60*60*24));
+}
+
+async function abrirDisparoTransmissoes(){
+  const painel=document.getElementById('painel-transmissoes');
+  if(painel.style.display!=='none'){painel.style.display='none';return;}
+  painel.style.display='block';
+  const lista=document.getElementById('lista-transmissoes-pendentes');
+  lista.innerHTML='<span style="color:#4a7a4a;font-size:12px">Carregando...</span>';
+
+  // Buscar mês atual
+  const hoje=new Date();
+  const mesRef=`${hoje.getFullYear()}-${String(hoje.getMonth()+1).padStart(2,'0')}-01`;
+
+  // Buscar calendário de leitura
+  const {data:cal}=await sb.from('calendario_leitura').select('rz,data_leitura').eq('mes_ref',mesRef);
+  const calMap={};
+  (cal||[]).forEach(r=>{ calMap[r.rz]=r.data_leitura; });
+
+  // Buscar transmissões do mês
+  const {data:trans}=await sb.from('transmissoes').select('ul,rz,base,cidade').eq('mes_ref',mesRef);
+
+  // Filtrar atrasadas
+  const hojeD=new Date(); hojeD.setHours(0,0,0,0);
+  const atrasadas=(trans||[]).filter(r=>{
+    const dl=calMap[r.rz];
+    if(!dl) return false;
+    const d=new Date(dl+'T12:00:00'); d.setHours(0,0,0,0);
+    return d<hojeD;
+  }).map(r=>({...r, dataLim:calMap[r.rz], dias:diasCorridos(calMap[r.rz])}));
+
+  if(!atrasadas.length){
+    lista.innerHTML='<span style="color:#2d7a2d;font-size:12px">✓ Nenhuma transmissão pendente.</span>';
+    return;
+  }
+
+  // Buscar supervisores por base
+  const {data:sups}=await sb.from('usuarios_portal').select('nome,email,base').in('perfil',['supervisor']).eq('ativo',true);
+  const supMap={};
+  (sups||[]).forEach(s=>{ if(s.base) supMap[s.base.toUpperCase()]=s; });
+
+  // Agrupar por base
+  const porBase={};
+  atrasadas.forEach(r=>{
+    const b=(r.base||'—').toUpperCase();
+    if(!porBase[b]) porBase[b]=[];
+    porBase[b].push(r);
+  });
+
+  let html=`<div style="font-size:12px;margin-bottom:8px;color:#1a4a1a;font-weight:500">${atrasadas.length} ULs atrasadas em ${Object.keys(porBase).length} bases</div>`;
+  html+=`<table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:10px">
+    <thead><tr style="background:#1a4a1a;color:#c0e8c0">
+      <th style="padding:5px 8px;text-align:left">Base</th>
+      <th style="padding:5px 8px">ULs</th>
+      <th style="padding:5px 8px">Supervisor</th>
+      <th style="padding:5px 8px">Dias pend.</th>
+      <th style="padding:5px 8px">Prazo resp.</th>
+      <th style="padding:5px 8px">Ação</th>
+    </tr></thead><tbody>`;
+
+  Object.entries(porBase).forEach(([base, uls])=>{
+    const sup=supMap[base];
+    const maxDias=Math.max(...uls.map(u=>u.dias||0));
+    const inputId=`prazo-trans-${base.replace(/\s/g,'_')}`;
+    html+=`<tr style="border-bottom:0.5px solid #c0dcc0">
+      <td style="padding:5px 8px;font-weight:500">${base}</td>
+      <td style="padding:5px 8px;text-align:center">${uls.length}</td>
+      <td style="padding:5px 8px">${sup?sup.nome:'<span style="color:#c00">Sem supervisor</span>'}</td>
+      <td style="padding:5px 8px;text-align:center;color:${maxDias>3?'#c00':'#b45309'}">${maxDias} dia(s)</td>
+      <td style="padding:5px 8px;text-align:center"><input type="date" id="${inputId}" style="font-size:11px;padding:2px 4px;border:0.5px solid #a0c8a0;border-radius:4px;width:110px"></td>
+      <td style="padding:5px 8px;text-align:center">
+        ${sup?`<button onclick="dispararTransmissao('${base}',${JSON.stringify(uls.length)},'${sup.nome}','${sup.email}','${inputId}')" style="background:#2d7a2d;color:#fff;border:none;padding:3px 8px;border-radius:4px;cursor:pointer;font-size:11px">Disparar</button>`:'—'}
+      </td>
+    </tr>`;
+  });
+  html+=`</tbody></table>`;
+  lista.innerHTML=html;
+}
+
+async function dispararTransmissao(base, qtdUls, supNome, supEmail, inputId){
+  const senha=prompt('Senha para disparar:');
+  if(senha!=='GBS@2026'){if(senha!==null)alert('Senha incorreta.');return;}
+  const prazoInp=document.getElementById(inputId).value;
+  if(!prazoInp){alert('Defina o prazo de resposta antes de disparar.');return;}
+  const prazoStr=new Date(prazoInp+'T12:00:00').toLocaleDateString('pt-BR');
+  const ocorrencia=`${qtdUls} UL(s) com leitura pendente de transmissão na base ${base}.`;
+  const {data:trat}=await sb.from('tratativas').insert({
+    tipo:'transmissoes', automatica:false,
+    supervisor_nome:supNome, supervisor_email:supEmail, base,
+    detalhe:ocorrencia, prazo_resposta:prazoInp,
+  }).select().single();
+  const link=`${location.origin}/controles/tratativas/responder.html?id=${trat?.id}`;
+  const {assunto,corpo}=montarEmail({supNome,base,tipo:'transmissoes',ocorrencia,prazoStr,link});
+  await fetch(`${SUPABASE_URL}/functions/v1/enviar-email`,{
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':`Bearer ${SUPABASE_KEY}`},
+    body:JSON.stringify({para:supEmail,assunto,corpo})
+  });
+  alert(`✓ Email enviado para ${supNome}!`);
+}
+
+async function abrirDisparoReleituras(){
+  const painel=document.getElementById('painel-releituras');
+  if(painel.style.display!=='none'){painel.style.display='none';return;}
+  painel.style.display='block';
+  const lista=document.getElementById('lista-releituras-pendentes');
+  lista.innerHTML='<span style="color:#4a7a4a;font-size:12px">Carregando...</span>';
+
+  const hoje=new Date(); hoje.setHours(0,0,0,0);
+  const mesRef=`${hoje.getFullYear()}-${String(hoje.getMonth()+1).padStart(2,'0')}-01`;
+  const {data:reles}=await sb.from('releituras').select('ul,rz,base,vencimento').eq('mes_ref',mesRef);
+
+  // Filtrar com vencimento chegando (até 5 dias) ou já vencido
+  const pendentes=(reles||[]).filter(r=>{
+    if(!r.vencimento) return false;
+    const d=new Date(r.vencimento+'T12:00:00'); d.setHours(0,0,0,0);
+    const diff=Math.floor((d-hoje)/(1000*60*60*24));
+    return diff<=5;
+  }).map(r=>{
+    const d=new Date(r.vencimento+'T12:00:00'); d.setHours(0,0,0,0);
+    const diff=Math.floor((d-hoje)/(1000*60*60*24));
+    return {...r, diff};
+  });
+
+  if(!pendentes.length){
+    lista.innerHTML='<span style="color:#2d7a2d;font-size:12px">✓ Nenhuma releitura pendente.</span>';
+    return;
+  }
+
+  const {data:sups}=await sb.from('usuarios_portal').select('nome,email,base').in('perfil',['supervisor']).eq('ativo',true);
+  const supMap={};
+  (sups||[]).forEach(s=>{ if(s.base) supMap[s.base.toUpperCase()]=s; });
+
+  const porBase={};
+  pendentes.forEach(r=>{
+    const b=(r.base||'—').toUpperCase();
+    if(!porBase[b]) porBase[b]=[];
+    porBase[b].push(r);
+  });
+
+  let html=`<div style="font-size:12px;margin-bottom:8px;color:#1a4a1a;font-weight:500">${pendentes.length} ULs com releitura próxima ou vencida</div>`;
+  html+=`<table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:10px">
+    <thead><tr style="background:#1a4a1a;color:#c0e8c0">
+      <th style="padding:5px 8px;text-align:left">Base</th>
+      <th style="padding:5px 8px">ULs</th>
+      <th style="padding:5px 8px">Supervisor</th>
+      <th style="padding:5px 8px">Situação</th>
+      <th style="padding:5px 8px">Prazo resp.</th>
+      <th style="padding:5px 8px">Ação</th>
+    </tr></thead><tbody>`;
+
+  Object.entries(porBase).forEach(([base, uls])=>{
+    const sup=supMap[base];
+    const vencidas=uls.filter(u=>u.diff<0).length;
+    const proximas=uls.filter(u=>u.diff>=0).length;
+    const situacao=vencidas?`<span style="color:#c00">${vencidas} vencida(s)</span>${proximas?` + ${proximas} próxima(s)`:''}`:
+      `<span style="color:#b45309">${proximas} próxima(s)</span>`;
+    const inputId=`prazo-rele-${base.replace(/\s/g,'_')}`;
+    html+=`<tr style="border-bottom:0.5px solid #c0dcc0">
+      <td style="padding:5px 8px;font-weight:500">${base}</td>
+      <td style="padding:5px 8px;text-align:center">${uls.length}</td>
+      <td style="padding:5px 8px">${sup?sup.nome:'<span style="color:#c00">Sem supervisor</span>'}</td>
+      <td style="padding:5px 8px">${situacao}</td>
+      <td style="padding:5px 8px;text-align:center"><input type="date" id="${inputId}" style="font-size:11px;padding:2px 4px;border:0.5px solid #a0c8a0;border-radius:4px;width:110px"></td>
+      <td style="padding:5px 8px;text-align:center">
+        ${sup?`<button onclick="dispararReleitura('${base}',${JSON.stringify(uls.length)},'${sup.nome}','${sup.email}','${inputId}')" style="background:#2d7a2d;color:#fff;border:none;padding:3px 8px;border-radius:4px;cursor:pointer;font-size:11px">Disparar</button>`:'—'}
+      </td>
+    </tr>`;
+  });
+  html+=`</tbody></table>`;
+  lista.innerHTML=html;
+}
+
+async function dispararReleitura(base, qtdUls, supNome, supEmail, inputId){
+  const senha=prompt('Senha para disparar:');
+  if(senha!=='GBS@2026'){if(senha!==null)alert('Senha incorreta.');return;}
+  const prazoInp=document.getElementById(inputId).value;
+  if(!prazoInp){alert('Defina o prazo de resposta antes de disparar.');return;}
+  const prazoStr=new Date(prazoInp+'T12:00:00').toLocaleDateString('pt-BR');
+  const ocorrencia=`${qtdUls} UL(s) com releitura pendente ou próxima do vencimento na base ${base}.`;
+  const {data:trat}=await sb.from('tratativas').insert({
+    tipo:'releituras', automatica:false,
+    supervisor_nome:supNome, supervisor_email:supEmail, base,
+    detalhe:ocorrencia, prazo_resposta:prazoInp,
+  }).select().single();
+  const link=`${location.origin}/controles/tratativas/responder.html?id=${trat?.id}`;
+  const {assunto,corpo}=montarEmail({supNome,base,tipo:'releituras',ocorrencia,prazoStr,link});
+  await fetch(`${SUPABASE_URL}/functions/v1/enviar-email`,{
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':`Bearer ${SUPABASE_KEY}`},
+    body:JSON.stringify({para:supEmail,assunto,corpo})
+  });
+  alert(`✓ Email enviado para ${supNome}!`);
+}
+
+// ── MANUAL ────────────────────────────────────────────────────────
+async function carregarSupervisores(){
+  const {data}=await sb.from('usuarios_portal').select('id,nome,email,base')
+    .in('perfil',['supervisor']).eq('ativo',true).order('nome');
+  const sel=document.getElementById('m-sup');
+  sel.innerHTML='<option value="">Selecione...</option>';
+  (data||[]).forEach(s=>sel.innerHTML+=`<option value="${s.id}" data-email="${s.email}" data-nome="${s.nome}" data-base="${s.base||''}">${s.nome} — ${s.base||'Todas'}</option>`);
+}
+
+async function enviarManual(){
+  const sel=document.getElementById('m-sup');
+  const opt=sel.options[sel.selectedIndex];
+  const msg=document.getElementById('m-msg').value.trim();
+  const prazoInp=document.getElementById('m-prazo').value;
+  const status=document.getElementById('m-msg-status');
+  if(!sel.value||!msg){status.className='msg erro';status.textContent='Selecione o supervisor e escreva a mensagem.';return;}
+  if(!prazoInp){status.className='msg erro';status.textContent='Defina o prazo para resposta.';return;}
+  status.className='msg';status.textContent='Enviando...';
+  const supId=sel.value;
+  const supEmail=opt.dataset.email;
+  const supNome=opt.dataset.nome;
+  const supBase=opt.dataset.base||null;
+  const prazoStr=new Date(prazoInp+'T12:00:00').toLocaleDateString('pt-BR');
+  const {data:trat}=await sb.from('tratativas').insert({
+    tipo:'manual', automatica:false,
+    supervisor_id:supId, supervisor_email:supEmail, supervisor_nome:supNome,
+    base:supBase,
+    detalhe:msg,
+    prazo_resposta:prazoInp,
+  }).select().single();
+  const link=`${location.origin}/controles/tratativas/responder.html?id=${trat?.id}`;
+  const {assunto,corpo}=montarEmail({supNome,base:supBase||'—',tipo:'manual',ocorrencia:msg,prazoStr,link});
+  await fetch(`${SUPABASE_URL}/functions/v1/enviar-email`,{
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':`Bearer ${SUPABASE_KEY}`},
+    body:JSON.stringify({para:supEmail,assunto,corpo})
+  });
+  status.className='msg ok';status.textContent=`✓ Email enviado para ${supNome}!`;
+  document.getElementById('m-msg').value='';
+  document.getElementById('m-prazo').value='';
+  sel.value='';
+  await carregarPainel();
 }
 </script>
 <script src="/controles/auto-logout.js"></script>
