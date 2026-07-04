@@ -14,7 +14,7 @@ body{font-family:system-ui,sans-serif;background:#f4f6f4;color:#1a2a1a;font-size
 .hdr-title{font-size:15px;font-weight:500;color:#c8e8c8;flex:1;text-align:center}
 .hdr-user{font-size:11px;color:#90c090}
 .btn-sair{background:none;border:1px solid #4a7a4a;color:#c8e8c8;padding:4px 12px;border-radius:4px;cursor:pointer;font-size:12px}
-.content{padding:16px 20px;max-width:1000px}
+.content{padding:16px 20px;max-width:1400px}
 .kpi-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
 .kpi{background:#fff;border:0.5px solid #c0dcc0;border-radius:8px;padding:10px 14px;text-align:center}
 .kpi-label{font-size:10px;color:#4a7a4a;text-transform:uppercase;letter-spacing:.3px;margin-bottom:4px}
@@ -181,7 +181,7 @@ function renderTabela(){
     <tr>
       <td><span class="badge b-ga">${TIPO[t.tipo]||t.tipo}</span></td>
       <td style="font-size:14px">${t.base||'—'}</td>
-      <td style="max-width:280px">${t.detalhe||'—'}</td>
+      <td style="max-width:480px">${t.detalhe||'—'}</td>
       <td>${t.mes_ref||'—'}</td>
       <td>${t.prazo_resposta?new Date(t.prazo_resposta+'T12:00:00').toLocaleDateString('pt-BR'):'—'}</td>
       <td>
