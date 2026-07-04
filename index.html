@@ -225,7 +225,7 @@ async function carregarPainel(){
   document.getElementById('kpi-at').textContent=lista.filter(t=>t.status_calc==='atrasada').length;
   document.getElementById('kpi-tot').textContent=lista.length;
   document.getElementById('p-count').textContent=`${lista.length} tratativa(s)`;
-  const TIPO={'impedimentos':'Impedimentos','erros':'Erros leitura','meta':'Meta leituras','inicio_tardio':'Início tardio','manual':'Manual'};
+  const TIPO={'impedimentos':'Impedimentos','erros':'Erros leitura','meta':'Meta leituras','inicio_tardio':'Início tardio','termino_tardio':'Término tardio','manual':'Manual'};
   const BADGEC={'respondida':'b-re','atrasada':'b-at','aberta':'b-ab'};
   const BADGET={'respondida':'Respondida','atrasada':'Atrasada','aberta':'Aberta'};
   document.getElementById('tbody-painel').innerHTML=lista.length?lista.map((t,i)=>`
@@ -381,6 +381,16 @@ async function carregarConfig(){
       <button class="btn-pause${cfg.inicio_tardio_email_pausado?' pausado':''}" onclick="togglePausa('inicio_tardio_email_pausado',this)">${cfg.inicio_tardio_email_pausado?'Email pausado':'Pausar email'}</button>
     </div>
     <div class="gatilho-row">
+      <span class="g-nome">Término tardio</span>
+      <span class="g-desc">Acima de</span>
+      <input class="inp-s" id="c-term-hora" value="${cfg.termino_tardio_hora||'18:00'}" style="width:70px">
+      <span class="g-desc">&nbsp;·&nbsp; Prazo:</span>
+      <input class="inp-s" id="c-prazo-term" value="${cfg.prazo_termino||5}" style="width:45px;text-align:center">
+      <span class="g-desc">dias</span>
+      <span class="${cfg.termino_tardio_ativo?'pill-on':'pill-off'}" onclick="toggleAtivo('termino_tardio_ativo',this)">${cfg.termino_tardio_ativo?'Ativo':'Inativo'}</span>
+      <button class="btn-pause${cfg.termino_tardio_email_pausado?' pausado':''}" onclick="togglePausa('termino_tardio_email_pausado',this)">${cfg.termino_tardio_email_pausado?'Email pausado':'Pausar email'}</button>
+    </div>
+    <div class="gatilho-row">
       <span class="g-nome">Velocidade</span>
       <span class="g-desc">Acima de</span>
       <input class="inp-s" id="c-vel-kmh" value="${cfg.velocidade_kmh||80}" style="width:60px">
@@ -423,10 +433,12 @@ async function salvarConfig(){
     meta_urb:parseInt(document.getElementById('c-meta-urb').value)||100,
     meta_rur:parseInt(document.getElementById('c-meta-rur').value)||60,
     inicio_tardio_hora:document.getElementById('c-ini-hora').value||'09:00',
+    termino_tardio_hora:document.getElementById('c-term-hora').value||'18:00',
     prazo_imp:parseInt(document.getElementById('c-prazo-imp').value)||5,
     prazo_err:parseInt(document.getElementById('c-prazo-err').value)||5,
     prazo_meta:parseInt(document.getElementById('c-prazo-meta').value)||5,
     prazo_ini:parseInt(document.getElementById('c-prazo-ini').value)||5,
+    prazo_termino:parseInt(document.getElementById('c-prazo-term').value)||5,
     velocidade_kmh:parseInt(document.getElementById('c-vel-kmh').value)||80,
     prazo_vel:parseInt(document.getElementById('c-prazo-vel').value)||5,
     updated_at:new Date().toISOString(),
@@ -439,7 +451,7 @@ async function salvarConfig(){
 
 // ── TEMPLATE DE EMAIL ─────────────────────────────────────────────
 function montarEmailReplica({supNome, base, tipo, detalhe, replicaTxt, replicaPor, exigeResposta, link}){
-  const TIPO_LABEL={'impedimentos':'Impedimentos GBS','erros':'Erros de leitura','meta':'Meta de leituras','inicio_tardio':'Início tardio','manual':'Manual','transmissoes':'Transmissões pendentes','releituras':'Releituras pendentes','velocidade':'Excesso de Velocidade'};
+  const TIPO_LABEL={'impedimentos':'Impedimentos GBS','erros':'Erros de leitura','meta':'Meta de leituras','inicio_tardio':'Início tardio','termino_tardio':'Término tardio','manual':'Manual','transmissoes':'Transmissões pendentes','releituras':'Releituras pendentes','velocidade':'Excesso de Velocidade'};
   const tipoLabel=TIPO_LABEL[tipo]||tipo;
   return {
     assunto:'Gestão de Controles - Réplica à sua resposta',
@@ -475,7 +487,7 @@ function montarEmailReplica({supNome, base, tipo, detalhe, replicaTxt, replicaPo
 }
 
 function montarEmail({supNome, base, tipo, ocorrencia, prazoStr, link}){
-  const TIPO_LABEL={'impedimentos':'Impedimentos GBS','erros':'Erros de leitura','meta':'Meta de leituras','inicio_tardio':'Início tardio','manual':'Manual','transmissoes':'Transmissões pendentes','releituras':'Releituras pendentes','velocidade':'Excesso de Velocidade'};
+  const TIPO_LABEL={'impedimentos':'Impedimentos GBS','erros':'Erros de leitura','meta':'Meta de leituras','inicio_tardio':'Início tardio','termino_tardio':'Término tardio','manual':'Manual','transmissoes':'Transmissões pendentes','releituras':'Releituras pendentes','velocidade':'Excesso de Velocidade'};
   const tipoLabel=TIPO_LABEL[tipo]||tipo;
   return {
     assunto:'Gestão de Controles - Ação atribuída a você',
