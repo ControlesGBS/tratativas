@@ -177,14 +177,23 @@ let GESTOR_NOME=null;
   // Registrar acesso
   await sb.from('usuarios_ultimo_acesso').upsert({user_id:user.id,ultimo_acesso:new Date().toISOString()});
   // Popular filtros
-  const hoje=new Date();
   const selMes=document.getElementById('p-mes');
-  for(let i=0;i<12;i++){
-    const d=new Date(hoje.getFullYear(),hoje.getMonth()-i,1);
-    const mm=String(d.getMonth()+1).padStart(2,'0');
-    const val=`${mm}/${d.getFullYear()}`;
-    selMes.innerHTML+=`<option value="${val}">${val}</option>`;
+  const {data:mesesData}=await sb.from('tratativas').select('mes_ref');
+  const mesesUniq=[...new Set((mesesData||[]).map(r=>r.mes_ref).filter(Boolean))];
+
+  function labelMes(raw){
+    // aceita 'yyyy-mm-01', 'yyyy-mm' ou 'mm/yyyy' e converte pra exibição MM/AAAA
+    if(/^\d{4}-\d{2}/.test(raw)){
+      const [aa,mm]=raw.slice(0,7).split('-');
+      return `${mm}/${aa}`;
+    }
+    return raw; // já está em mm/aaaa ou outro formato — exibe como está
   }
+
+  mesesUniq
+    .sort((a,b)=>labelMes(b).split('/').reverse().join('')-labelMes(a).split('/').reverse().join(''))
+    .forEach(raw=>{ selMes.innerHTML+=`<option value="${raw}">${labelMes(raw)}</option>`; });
+
   const {data:bases}=await sb.from('local_base').select('base').order('base');
   const basesUniq=[...new Set((bases||[]).map(r=>r.base).filter(Boolean))];
   const selBase=document.getElementById('p-base');
