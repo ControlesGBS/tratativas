@@ -390,16 +390,6 @@ async function carregarConfig(){
       <span class="${cfg.termino_tardio_ativo?'pill-on':'pill-off'}" onclick="toggleAtivo('termino_tardio_ativo',this)">${cfg.termino_tardio_ativo?'Ativo':'Inativo'}</span>
       <button class="btn-pause${cfg.termino_tardio_email_pausado?' pausado':''}" onclick="togglePausa('termino_tardio_email_pausado',this)">${cfg.termino_tardio_email_pausado?'Email pausado':'Pausar email'}</button>
     </div>
-    <div class="gatilho-row">
-      <span class="g-nome">Velocidade</span>
-      <span class="g-desc">Acima de</span>
-      <input class="inp-s" id="c-vel-kmh" value="${cfg.velocidade_kmh||80}" style="width:60px">
-      <span class="g-desc">km/h &nbsp;·&nbsp; Prazo:</span>
-      <input class="inp-s" id="c-prazo-vel" value="${cfg.prazo_vel||5}" style="width:45px;text-align:center">
-      <span class="g-desc">dias</span>
-      <span class="${cfg.velocidade_ativo?'pill-on':'pill-off'}" onclick="toggleAtivo('velocidade_ativo',this)">${cfg.velocidade_ativo?'Ativo':'Inativo'}</span>
-      <button class="btn-pause${cfg.velocidade_email_pausado?' pausado':''}" onclick="togglePausa('velocidade_email_pausado',this)">${cfg.velocidade_email_pausado?'Email pausado':'Pausar email'}</button>
-    </div>
     <div style="display:flex;justify-content:flex-end;margin-top:12px">
       <button class="btn-verde" onclick="salvarConfig()">Salvar configurações</button>
     </div>
@@ -439,8 +429,6 @@ async function salvarConfig(){
     prazo_meta:parseInt(document.getElementById('c-prazo-meta').value)||5,
     prazo_ini:parseInt(document.getElementById('c-prazo-ini').value)||5,
     prazo_termino:parseInt(document.getElementById('c-prazo-term').value)||5,
-    velocidade_kmh:parseInt(document.getElementById('c-vel-kmh').value)||80,
-    prazo_vel:parseInt(document.getElementById('c-prazo-vel').value)||5,
     updated_at:new Date().toISOString(),
   };
   const {error}=await sb.from('tratativas_config').update(updates).eq('id',CFG.id);
