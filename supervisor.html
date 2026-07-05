@@ -81,7 +81,7 @@ tbody td{padding:10px 12px;color:#1a2a1a;vertical-align:middle}
     </div>
     <table>
       <thead><tr>
-        <th>Tipo</th><th>Base</th><th>Detalhe</th><th>Mês</th><th>Prazo</th><th>Status</th><th>Ação</th>
+        <th>Tipo</th><th>Base</th><th>Detalhe</th><th>Recebido em</th><th>Prazo</th><th>Status</th><th>Ação</th>
       </tr></thead>
       <tbody id="tbody"><tr><td colspan="7" class="status-msg">Carregando...</td></tr></tbody>
     </table>
@@ -184,7 +184,7 @@ function renderTabela(){
       <td><span class="badge b-ga">${TIPO[t.tipo]||t.tipo}</span></td>
       <td style="font-size:14px">${t.base||'—'}</td>
       <td style="max-width:480px">${t.detalhe||'—'}</td>
-      <td>${t.mes_ref||'—'}</td>
+      <td style="font-size:12px;white-space:nowrap">${t.created_at?new Date(t.created_at).toLocaleDateString('pt-BR')+' '+new Date(t.created_at).toLocaleTimeString('pt-BR').slice(0,5):'—'}</td>
       <td>${t.prazo_resposta?new Date(t.prazo_resposta+'T12:00:00').toLocaleDateString('pt-BR'):'—'}</td>
       <td>
         <span class="badge ${BC[t.sc]}">${BT[t.sc]}</span>
