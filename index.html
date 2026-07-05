@@ -360,36 +360,6 @@ async function carregarConfig(){
       <span class="${cfg.erros_ativo?'pill-on':'pill-off'}" onclick="toggleAtivo('erros_ativo',this)">${cfg.erros_ativo?'Ativo':'Inativo'}</span>
       <button class="btn-pause${cfg.erros_email_pausado?' pausado':''}" onclick="togglePausa('erros_email_pausado',this)">${cfg.erros_email_pausado?'Email pausado':'Pausar email'}</button>
     </div>
-    <div class="gatilho-row">
-      <span class="g-nome">Meta de leituras</span>
-      <span class="g-desc">Urbano</span><input class="inp-s" id="c-meta-urb" value="${cfg.meta_urb}">
-      <span class="g-desc">Rural</span><input class="inp-s" id="c-meta-rur" value="${cfg.meta_rur}">
-      <span class="g-desc">&nbsp;·&nbsp; Prazo:</span>
-      <input class="inp-s" id="c-prazo-meta" value="${cfg.prazo_meta||5}" style="width:45px;text-align:center">
-      <span class="g-desc">dias</span>
-      <span class="${cfg.meta_ativo?'pill-on':'pill-off'}" onclick="toggleAtivo('meta_ativo',this)">${cfg.meta_ativo?'Ativo':'Inativo'}</span>
-      <button class="btn-pause${cfg.meta_email_pausado?' pausado':''}" onclick="togglePausa('meta_email_pausado',this)">${cfg.meta_email_pausado?'Email pausado':'Pausar email'}</button>
-    </div>
-    <div class="gatilho-row">
-      <span class="g-nome">Início tardio</span>
-      <span class="g-desc">Acima de</span>
-      <input class="inp-s" id="c-ini-hora" value="${cfg.inicio_tardio_hora}" style="width:70px">
-      <span class="g-desc">&nbsp;·&nbsp; Prazo:</span>
-      <input class="inp-s" id="c-prazo-ini" value="${cfg.prazo_ini||5}" style="width:45px;text-align:center">
-      <span class="g-desc">dias</span>
-      <span class="${cfg.inicio_tardio_ativo?'pill-on':'pill-off'}" onclick="toggleAtivo('inicio_tardio_ativo',this)">${cfg.inicio_tardio_ativo?'Ativo':'Inativo'}</span>
-      <button class="btn-pause${cfg.inicio_tardio_email_pausado?' pausado':''}" onclick="togglePausa('inicio_tardio_email_pausado',this)">${cfg.inicio_tardio_email_pausado?'Email pausado':'Pausar email'}</button>
-    </div>
-    <div class="gatilho-row">
-      <span class="g-nome">Término tardio</span>
-      <span class="g-desc">Acima de</span>
-      <input class="inp-s" id="c-term-hora" value="${cfg.termino_tardio_hora||'18:00'}" style="width:70px">
-      <span class="g-desc">&nbsp;·&nbsp; Prazo:</span>
-      <input class="inp-s" id="c-prazo-term" value="${cfg.prazo_termino||5}" style="width:45px;text-align:center">
-      <span class="g-desc">dias</span>
-      <span class="${cfg.termino_tardio_ativo?'pill-on':'pill-off'}" onclick="toggleAtivo('termino_tardio_ativo',this)">${cfg.termino_tardio_ativo?'Ativo':'Inativo'}</span>
-      <button class="btn-pause${cfg.termino_tardio_email_pausado?' pausado':''}" onclick="togglePausa('termino_tardio_email_pausado',this)">${cfg.termino_tardio_email_pausado?'Email pausado':'Pausar email'}</button>
-    </div>
     <div style="display:flex;justify-content:flex-end;margin-top:12px">
       <button class="btn-verde" onclick="salvarConfig()">Salvar configurações</button>
     </div>
@@ -420,15 +390,8 @@ async function salvarConfig(){
   const updates={
     impedimentos_qtd:parseInt(document.getElementById('c-imp-qtd').value)||10,
     erros_qtd:parseInt(document.getElementById('c-err-qtd').value)||1,
-    meta_urb:parseInt(document.getElementById('c-meta-urb').value)||100,
-    meta_rur:parseInt(document.getElementById('c-meta-rur').value)||60,
-    inicio_tardio_hora:document.getElementById('c-ini-hora').value||'09:00',
-    termino_tardio_hora:document.getElementById('c-term-hora').value||'18:00',
     prazo_imp:parseInt(document.getElementById('c-prazo-imp').value)||5,
     prazo_err:parseInt(document.getElementById('c-prazo-err').value)||5,
-    prazo_meta:parseInt(document.getElementById('c-prazo-meta').value)||5,
-    prazo_ini:parseInt(document.getElementById('c-prazo-ini').value)||5,
-    prazo_termino:parseInt(document.getElementById('c-prazo-term').value)||5,
     updated_at:new Date().toISOString(),
   };
   const {error}=await sb.from('tratativas_config').update(updates).eq('id',CFG.id);
