@@ -303,16 +303,18 @@ async function salvarReplica(id){
   if(!txt){alert('Escreva a réplica antes de salvar.');return;}
   const exigeResposta=document.getElementById(`chk-exige-${id}`)?.checked||false;
 
+  const {data:trAtual}=await sb.from('tratativas').select('historico,tipo').eq('id',id).single();
+
   const update={replica:txt,replica_em:new Date().toISOString(),replica_por:GESTOR_NOME,replica_exige_resposta:exigeResposta};
   if(exigeResposta){
     update.respondida=false; update.respondida_em=null;
-    // Renovar prazo, já que o prazo antigo pode já ter passado
-    const {data:cfgPrazo}=await sb.from('tratativas_config').select('prazo_dias').single();
-    const novoPrazo=new Date(); novoPrazo.setDate(novoPrazo.getDate()+(cfgPrazo?.prazo_dias||5));
+    // Renovar prazo, já que o prazo antigo pode já ter passado — cada tipo tem seu próprio campo de config
+    const {data:cfgPrazo}=await sb.from('tratativas_config').select('prazo_imp,prazo_err').single();
+    const prazoMap={impedimentos:cfgPrazo?.prazo_imp,erros:cfgPrazo?.prazo_err};
+    const novoPrazo=new Date(); novoPrazo.setDate(novoPrazo.getDate()+(prazoMap[trAtual?.tipo]||5));
     update.prazo_resposta=novoPrazo.toISOString().split('T')[0];
   }
   // Adicionar ao histórico da conversa (sem apagar rodadas anteriores)
-  const {data:trAtual}=await sb.from('tratativas').select('historico').eq('id',id).single();
   const hist=trAtual?.historico||[];
   hist.push({tipo:'replica',texto:txt,autor:GESTOR_NOME,data:new Date().toISOString()});
   update.historico=hist;
